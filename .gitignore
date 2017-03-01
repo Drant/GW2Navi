@@ -1,0 +1,11 @@
+﻿backup/*
+bin/cache/*
+build/*
+dist/*
+nbproject/*
+test/*
+
+build.xml
+debug.log
+manifest.mf
+options-debug.ini

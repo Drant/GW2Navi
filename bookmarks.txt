@@ -1,0 +1,10 @@
+﻿// GW2Navi Bookmarks
+// Lines starting with double forward slashes (//) are comments.
+// Format of a bookmark: <name of site>=<url of site> (must be separated by "=").
+// -----------------------------------------------------------------------------
+Guild Wars 2   = http://www.guildwars2.com
+Official Forum = https://forum-en.guildwars2.com/forum
+Official Wiki  = http://wiki.guildwars2.com
+Reddit         = http://www.reddit.com/r/guildwars2
+Dulfy          = http://dulfy.net/category/gw2/
+My Guild = http://example.com
