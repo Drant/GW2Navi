@@ -59,7 +59,7 @@ public final class Navi extends JPanel {
 	final static String DIRECTORY_ICONS = "img/"; // Image folder inside package
 	final static String DIRECTORY_ICONS_CUSTOM = "bin/cursors/";
 	final static String FILENAME_EXECUTABLE = "GW2Navi_Start_2D.bat"; // For new window action
-	final static String FILENAME_OPTIONS = "options-debug.ini";
+	final static String FILENAME_OPTIONS = "options.ini";
 	final static String FILENAME_TRANSLATIONS = "translations.ini";
 	final static String FILENAME_BOOKMARKS = "bookmarks.txt";
 	final static String EXTENSION_IMAGES = ".png";
