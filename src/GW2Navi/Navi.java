@@ -220,7 +220,7 @@ public final class Navi extends JPanel {
 		 * This variable is a way to tell if multiple instances of the overlay is
 		 * running. It is false when any instances run, and true when any instance
 		 * exits. A potential problem is if the user starts two instances, closes
-		 * one, and run another: that instance would think it is alone.
+		 * one, and runs another: that instance would think it is alone.
 		 */
 		if (TheOptions.wantSingleInstance)
 		{
