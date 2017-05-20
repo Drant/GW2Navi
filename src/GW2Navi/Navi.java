@@ -52,7 +52,7 @@ import org.ini4j.Ini;
 public final class Navi extends JPanel {
 	
 	// Meta
-	final static String PROGRAM_VERSION = "2017.03.01";
+	final static String PROGRAM_VERSION = "2017.05.20";
 	final static String PROGRAM_NAME = "GW2Navi";
 	final static String PROGRAM_NAME_PROJECTION = "GW2Navi 3D";
 	final static String PROGRAM_NAME_CURSOR = "GW2Navi Cursor";
@@ -109,6 +109,7 @@ public final class Navi extends JPanel {
 	// Browser
 	BrowserWrapper TheBrowserWrapper;
 	CefBrowser TheBrowser;
+	StringBuilder TheConsoleLog;
 	
 	// Messages
 	final String TEXT_FILELOADWARNING = " was unable to be loaded!";

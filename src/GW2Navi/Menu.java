@@ -44,6 +44,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
 public class Menu {
@@ -516,6 +518,20 @@ public class Menu {
 					JOptionPane.INFORMATION_MESSAGE,
 					Navi.getIcon("task_program")
 			);
+			// Also print console messages if available
+			if (oNavi.TheConsoleLog.length() > 0)
+			{
+				JTextArea jta = new JTextArea(oNavi.TheConsoleLog.toString());
+				JScrollPane jsp = new JScrollPane(jta)
+				{
+					@Override
+					public Dimension getPreferredSize()
+					{
+						return new Dimension(1024, 512);
+					}
+				};
+				JOptionPane.showMessageDialog(oNavi.TheFrame, jsp, "Browser Console Log", JOptionPane.ERROR_MESSAGE);
+			}
 		});
 		item_Exit.addActionListener((ActionEvent e) ->
 		{

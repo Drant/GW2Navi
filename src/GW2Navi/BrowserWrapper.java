@@ -9,6 +9,7 @@ package GW2Navi;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.io.File;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -49,6 +50,7 @@ public class BrowserWrapper {
 	public BrowserWrapper(Navi pNavi, boolean pIsProjection)
 	{
 		TheOptions = pNavi.TheOptions;
+		pNavi.TheConsoleLog = new StringBuilder();
 		boolean wantOffscreenRendering = false;
 		boolean wantTransparent = true;
 		
@@ -98,14 +100,6 @@ public class BrowserWrapper {
 		if (pIsProjection == false)
 		{
 			TheNavbar = new NavigationBar(JCEF_Browser, TheOptions);
-			JCEF_Client.addDisplayHandler(new CefDisplayHandlerAdapter()
-			{
-				@Override
-				public void onAddressChange(CefBrowser browser, String url)
-				{
-					TheNavbar.setAddress(browser, url);
-				}
-			});
 			JCEF_Client.addLoadHandler(new CefLoadHandlerAdapter()
 			{
 				@Override
@@ -115,6 +109,27 @@ public class BrowserWrapper {
 				}
 			});
 		}
+		
+		// Custom event handling
+		JCEF_Client.addDisplayHandler(new CefDisplayHandlerAdapter()
+		{
+			@Override
+			public void onAddressChange(CefBrowser browser, String url)
+			{
+				if (TheNavbar != null)
+				{
+					TheNavbar.setAddress(browser, url);
+				}
+			}
+			@Override
+			public boolean onConsoleMessage(CefBrowser browser, String message, String source, int line)
+			{
+				Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+				String outputline = "[" + timestamp + "] \"" + message + "\", source: " + source + " (" + line + ")\n";
+				pNavi.TheConsoleLog.append(outputline);
+				return false;
+			}
+		});
 		
 		// Insert browser into frame
 		webBrowserPanel.add(JCEF_Browser.getUIComponent(), BorderLayout.CENTER);
