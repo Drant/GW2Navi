@@ -51,10 +51,12 @@ public class Option {
 	float ZOOM_DEFAULT_LEVEL;
 	float OPACITY_FOCUSED;
 	float OPACITY_UNFOCUSED;
-	float OPACITY_PROJECTION;
+	float PROJECTION_OPACITY_FOCUSED;
+	float PROJECTION_OPACITY_UNFOCUSED;
 	boolean wantSingleInstance;
 	boolean wantNativeInterface;
 	boolean wantOpacityOnFocus;
+	boolean wantProjectionOpacityOnFocus;
 	boolean wantAlwaysOnTop;
 	boolean wantNavbar;
 	boolean wantLastVisited;
@@ -140,10 +142,12 @@ public class Option {
 		ZOOM_DEFAULT_LEVEL = Float.parseFloat(preferences.get("ZOOM_DEFAULT_LEVEL"));
 		OPACITY_FOCUSED = Float.parseFloat(preferences.get("OPACITY_FOCUSED"));
 		OPACITY_UNFOCUSED = Float.parseFloat(preferences.get("OPACITY_UNFOCUSED"));
-		OPACITY_PROJECTION = Float.parseFloat(preferences.get("OPACITY_PROJECTION"));
+		PROJECTION_OPACITY_FOCUSED = Float.parseFloat(preferences.get("PROJECTION_OPACITY_FOCUSED"));
+		PROJECTION_OPACITY_UNFOCUSED = Float.parseFloat(preferences.get("PROJECTION_OPACITY_UNFOCUSED"));
 		wantSingleInstance = Boolean.parseBoolean(preferences.get("wantSingleInstance"));
 		wantNativeInterface = Boolean.parseBoolean(preferences.get("wantNativeInterface"));
 		wantOpacityOnFocus = Boolean.parseBoolean(preferences.get("wantOpacityOnFocus"));
+		wantProjectionOpacityOnFocus = Boolean.parseBoolean(preferences.get("wantProjectionOpacityOnFocus"));
 		wantAlwaysOnTop = Boolean.parseBoolean(preferences.get("wantAlwaysOnTop"));
 		wantNavbar = Boolean.parseBoolean(preferences.get("wantNavbar"));
 		wantLastVisited = Boolean.parseBoolean(preferences.get("wantLastVisited"));
@@ -251,6 +255,12 @@ public class Option {
 		preferences.put("wantOpacityOnFocus", pValue);
 	}
 	
+	public void set_wantProjectionOpacityOnFocus(boolean pValue)
+	{
+		wantProjectionOpacityOnFocus = pValue;
+		preferences.put("wantProjectionOpacityOnFocus", pValue);
+	}
+	
 	public void set_wantAlwaysOnTop(boolean pValue)
 	{
 		wantAlwaysOnTop = pValue;
@@ -293,10 +303,16 @@ public class Option {
 		preferences.put("OPACITY_UNFOCUSED", pValue);
 	}
 	
-	public void set_OPACITY_PROJECTION(float pValue)
+	public void set_PROJECTION_OPACITY_FOCUSED(float pValue)
 	{
-		OPACITY_PROJECTION = pValue;
-		preferences.put("OPACITY_PROJECTION", pValue);
+		PROJECTION_OPACITY_FOCUSED = pValue;
+		preferences.put("PROJECTION_OPACITY_FOCUSED", pValue);
+	}
+	
+	public void set_PROJECTION_OPACITY_UNFOCUSED(float pValue)
+	{
+		PROJECTION_OPACITY_UNFOCUSED = pValue;
+		preferences.put("PROJECTION_OPACITY_UNFOCUSED", pValue);
 	}
 	
 	public void set_WINDOWPRESET_START(int pWidth, int pHeight, int pPosX, int pPosY)

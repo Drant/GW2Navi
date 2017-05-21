@@ -37,11 +37,14 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
 import java.io.File;
 import java.io.IOException;
+import java.sql.Timestamp;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.LineBorder;
@@ -52,17 +55,19 @@ import org.ini4j.Ini;
 public final class Navi extends JPanel {
 	
 	// Meta
+	boolean isDebug = false;
 	final static String PROGRAM_VERSION = "2017.05.20";
 	final static String PROGRAM_NAME = "GW2Navi";
 	final static String PROGRAM_NAME_PROJECTION = "GW2Navi 3D";
 	final static String PROGRAM_NAME_CURSOR = "GW2Navi Cursor";
-	final static String DIRECTORY_ICONS = "img/"; // Image folder inside package
-	final static String DIRECTORY_ICONS_CUSTOM = "bin/cursors/";
-	final static String FILENAME_EXECUTABLE = "GW2Navi_Start_2D.bat"; // For new window action
-	final static String FILENAME_OPTIONS = "options.ini";
-	final static String FILENAME_TRANSLATIONS = "translations.ini";
-	final static String FILENAME_BOOKMARKS = "bookmarks.txt";
-	final static String EXTENSION_IMAGES = ".png";
+	static String DIRECTORY_ICONS = "img/"; // Image folder inside package
+	static String DIRECTORY_ICONS_CUSTOM = "bin/cursors/";
+	static String FILENAME_EXECUTABLE = "GW2Navi_Start_2D.bat"; // For new window action
+	static String FILENAME_OPTIONS = "options.ini";
+	static String FILENAME_OPTIONS_DEBUG = "options-debug.ini";
+	static String FILENAME_TRANSLATIONS = "translations.ini";
+	static String FILENAME_BOOKMARKS = "bookmarks.txt";
+	static String EXTENSION_IMAGES = ".png";
 	static String DIRECTORY_CURRENT = "";
 	static String DIRECTORY_CUSTOM = "";
 	
@@ -80,12 +85,13 @@ public final class Navi extends JPanel {
 	int OPACITY_LEVELS_10 = 10;
 	float OPACITY_STEP = 0.10f;
 	float TRANSPARENCY_MIN = 0.90f; // Highest level of opacity that is still transparent
+	boolean isProjection = false;
 	boolean isBarVisible = true;
 	boolean isClickable = true;
 	boolean isMiniaturized = false;
 	boolean isGPSStarted = false;
 	boolean isCursorStarted = false;
-	boolean isProjection = false;
+	boolean isExited = false;
 	
 	// Files
 	protected Translation TheTranslations;
@@ -159,8 +165,16 @@ public final class Navi extends JPanel {
 		super(new BorderLayout());
 		isProjection = pIsProjection;
 		
+		// Changes for debugging
+		if (isDebug)
+		{
+			FILENAME_OPTIONS = FILENAME_OPTIONS_DEBUG;
+		}
+		
 		// Load options and data first before doing anything
 		loadStorage();
+		TheConsoleLog = new StringBuilder();
+		addLog("Below are browser script errors and other console messages, if available.");
 		
 		// Set to Window's native appearance instead of standard Java GUI
 		if (TheOptions.wantNativeInterface)
@@ -354,7 +368,7 @@ public final class Navi extends JPanel {
 		TheProjection.setResizable(false);
 		TheProjection.setUndecorated(true);
 		TheProjection.setBackground(new Color(0, 0, 0, 0)); 
-		TheProjection.setOpacity(TheOptions.OPACITY_PROJECTION);
+		TheProjection.setOpacity(TheOptions.PROJECTION_OPACITY_FOCUSED);
 		TheProjection.setVisible(true);
 		TheProjection.setSize(RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
 		TheProjection.setExtendedState(JFrame.MAXIMIZED_BOTH); // Maximized will make it overlap the taskbar, which is desired for fullscreen
@@ -795,6 +809,7 @@ public final class Navi extends JPanel {
 			// Restyle the bar
 			COLOR_BAR_CURRENT = TheOptions.COLORPRESET_START.BarFocused;
 			TheBar.setBackground(TheOptions.COLORPRESET_START.BarFocused);
+			// Reapply opacity
 			if (TheOptions.wantOpacityOnFocus)
 			{
 				TheFrame.setOpacity(TheOptions.OPACITY_FOCUSED);
@@ -814,6 +829,7 @@ public final class Navi extends JPanel {
 			// Restyle the bar
 			COLOR_BAR_CURRENT = TheOptions.COLORPRESET_START.BarUnfocused;
 			TheBar.setBackground(TheOptions.COLORPRESET_START.BarUnfocused);
+			// Reapply opacity
 			if (TheOptions.wantOpacityOnFocus)
 			{
 				TheFrame.setOpacity(TheOptions.OPACITY_UNFOCUSED);
@@ -861,12 +877,30 @@ public final class Navi extends JPanel {
 			// Make the window clickable if focused (by using the taskbar)
 			setClickable(true);
 			TheKnob.updateKnobAppearance(0);
+			// Reapply opacity
+			if (TheOptions.wantProjectionOpacityOnFocus)
+			{
+				TheProjection.setOpacity(TheOptions.PROJECTION_OPACITY_FOCUSED);
+			}
+			else
+			{
+				TheProjection.setOpacity(TheOptions.PROJECTION_OPACITY_UNFOCUSED);
+			}
 		}
 		else
 		{
 			if (TheProjection.getState() == Frame.ICONIFIED)
 			{
 				TheKnob.updateKnobAppearance(2);
+			}
+			// Reapply opacity
+			if (TheOptions.wantProjectionOpacityOnFocus)
+			{
+				TheProjection.setOpacity(TheOptions.PROJECTION_OPACITY_UNFOCUSED);
+			}
+			else
+			{
+				TheProjection.setOpacity(TheOptions.PROJECTION_OPACITY_UNFOCUSED);
 			}
 		}
 		if (pState)
@@ -893,20 +927,24 @@ public final class Navi extends JPanel {
 	 */
 	protected void doExit()
 	{
-		// Stop GPS loop thread
-		toggleGPS(false);
-		toggleVisibleCursor(false);
-		// Save all options
-		saveOptions();
-		// Close the browser and frame
-		CefApp.getInstance().dispose();
-		if (isProjection)
+		if (isExited == false)
 		{
-			TheProjection.dispose();
-		}
-		else
-		{
-			TheFrame.dispose();
+			isExited = true;
+			// Stop GPS loop thread
+			toggleGPS(false);
+			toggleVisibleCursor(false);
+			// Save all options
+			saveOptions();
+			// Close the browser and frame
+			CefApp.getInstance().dispose();
+			if (isProjection)
+			{
+				TheProjection.dispose();
+			}
+			else
+			{
+				TheFrame.dispose();
+			}
 		}
 	}
 
@@ -981,6 +1019,34 @@ public final class Navi extends JPanel {
 		JOptionPane.showMessageDialog(TheFrame,
 			pItemName + TEXT_FILESAVEWARNING,
 			"Warning", JOptionPane.ERROR_MESSAGE);
+	}
+	
+	/**
+	 * Adds a log entry line to the string representation of the browser console log.
+	 * @param pMessage to add.
+	 */
+	public void addLog(String pMessage)
+	{
+		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+		String outputline = "[" + timestamp + "] " + pMessage + "\n";
+		TheConsoleLog.append(outputline);
+	}
+	
+	/**
+	 * Shows the browser console log.
+	 */
+	public void showLog()
+	{
+		JTextArea jta = new JTextArea(TheConsoleLog.toString());
+		JScrollPane jsp = new JScrollPane(jta)
+		{
+			@Override
+			public Dimension getPreferredSize()
+			{
+				return new Dimension(1024, 512);
+			}
+		};
+		JOptionPane.showMessageDialog(TheFrame, jsp, "Browser Console Log", JOptionPane.WARNING_MESSAGE);
 	}
 	
 	/**

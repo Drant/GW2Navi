@@ -50,7 +50,6 @@ public class BrowserWrapper {
 	public BrowserWrapper(Navi pNavi, boolean pIsProjection)
 	{
 		TheOptions = pNavi.TheOptions;
-		pNavi.TheConsoleLog = new StringBuilder();
 		boolean wantOffscreenRendering = false;
 		boolean wantTransparent = true;
 		
@@ -110,7 +109,7 @@ public class BrowserWrapper {
 			});
 		}
 		
-		// Custom event handling
+		// Custom event handling and browser console
 		JCEF_Client.addDisplayHandler(new CefDisplayHandlerAdapter()
 		{
 			@Override
@@ -124,9 +123,7 @@ public class BrowserWrapper {
 			@Override
 			public boolean onConsoleMessage(CefBrowser browser, String message, String source, int line)
 			{
-				Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-				String outputline = "[" + timestamp + "] \"" + message + "\", source: " + source + " (" + line + ")\n";
-				pNavi.TheConsoleLog.append(outputline);
+				pNavi.addLog("\"" + message + "\", source: " + source + " (" + line + ")");
 				return false;
 			}
 		});
@@ -141,7 +138,7 @@ public class BrowserWrapper {
 		else
 		{
 			pNavi.add(TheNavbar, BorderLayout.NORTH);
-			JCEF_Browser.getUIComponent().setFocusable(false); // Prevents the browser from stealing focus from the frame
+			JCEF_Browser.getUIComponent().setFocusable(false); // Prevents the browser from taking focus from the frame
 		}
 		pNavi.add(webBrowserPanel, BorderLayout.CENTER);
 		
@@ -192,8 +189,9 @@ public class BrowserWrapper {
 			}
 			return pAddress; 
 		}
+		
 		// If illegal address then use default URL
-		return TheOptions.URL_SITE;
+		return TheOptions.URL_HOMEPAGE;
 	}
 	
 	/**

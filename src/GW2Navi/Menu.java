@@ -44,8 +44,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
 public class Menu {
@@ -444,6 +442,7 @@ public class Menu {
 		JMenuItem item_Navigation = new JCheckBoxMenuItem(oNavi.TheTranslations.get("Show", "Navigation"));
 		JMenuItem item_NewWindow = new JMenuItem(oNavi.TheTranslations.get("New", "Window"));
 		JMenuItem item_Reload = new JMenuItem(oNavi.TheTranslations.get("Reload"));
+		JMenuItem item_Log = new JMenuItem(oNavi.TheTranslations.get("Log"));
 		JMenuItem item_Home = new JMenuItem(oNavi.TheTranslations.get("Homepage"));
 		JMenuItem item_Update = new JMenuItem(oNavi.TheTranslations.get("Update"));
 		JMenuItem item_About = new JMenuItem(oNavi.TheTranslations.get("About"));
@@ -454,6 +453,7 @@ public class Menu {
 		item_Navigation.setIcon(Navi.getIcon("navigation"));
 		item_NewWindow.setIcon(Navi.getIcon("newwindow"));
 		item_Reload.setIcon(Navi.getIcon("br_reload"));
+		item_Log.setIcon(Navi.getIcon("log"));
 		item_Home.setIcon(Navi.getIcon("home"));
 		item_Update.setIcon(Navi.getIcon("update"));
 		item_About.setIcon(Navi.getIcon("about"));
@@ -464,6 +464,7 @@ public class Menu {
 		item_Navigation.setMnemonic(KeyEvent.VK_V);
 		item_NewWindow.setMnemonic(KeyEvent.VK_W);
 		item_Reload.setMnemonic(KeyEvent.VK_R);
+		item_Log.setMnemonic(KeyEvent.VK_L);
 		item_Home.setMnemonic(KeyEvent.VK_H);
 		item_Update.setMnemonic(KeyEvent.VK_U);
 		item_About.setMnemonic(KeyEvent.VK_A);
@@ -474,6 +475,7 @@ public class Menu {
 		menu_Main.addSeparator();
 		menu_Main.add(item_NewWindow);
 		menu_Main.add(item_Reload);
+		menu_Main.add(item_Log);
 		menu_Main.addSeparator();
 		menu_Main.add(item_Home);
 		menu_Main.add(item_Update);
@@ -497,6 +499,10 @@ public class Menu {
 		{
 			oNavi.TheBrowser.reloadIgnoreCache();
 		});
+		item_Log.addActionListener((ActionEvent e) ->
+		{
+			oNavi.showLog();
+		});
 		item_Home.addActionListener((ActionEvent e) ->
 		{
 			oNavi.TheBrowser.loadURL(oNavi.TheOptions.URL_HOMEPAGE);
@@ -518,20 +524,6 @@ public class Menu {
 					JOptionPane.INFORMATION_MESSAGE,
 					Navi.getIcon("task_program")
 			);
-			// Also print console messages if available
-			if (oNavi.TheConsoleLog.length() > 0)
-			{
-				JTextArea jta = new JTextArea(oNavi.TheConsoleLog.toString());
-				JScrollPane jsp = new JScrollPane(jta)
-				{
-					@Override
-					public Dimension getPreferredSize()
-					{
-						return new Dimension(1024, 512);
-					}
-				};
-				JOptionPane.showMessageDialog(oNavi.TheFrame, jsp, "Browser Console Log", JOptionPane.ERROR_MESSAGE);
-			}
 		});
 		item_Exit.addActionListener((ActionEvent e) ->
 		{
@@ -975,16 +967,19 @@ public class Menu {
 		// Custom tray popup menu
 		JPopupMenu TrayPopup = new JPopupMenu();
 		JMenu tmenu_Opacity = new JMenu(oNavi.TheTranslations.get("Opacity"));
+		JMenu tmenu_OpacityFocused = new JMenu(oNavi.TheTranslations.get("Opacity", "Focused"));
 		JMenu tmenu_Window = new JMenu(oNavi.TheTranslations.get("Window"));
 		JMenu tmenu_Navigation = new JMenu(oNavi.TheTranslations.get("Navigation"));
 		JMenuItem titem_NewWindow = new JMenuItem(oNavi.TheTranslations.get("New", "Window"));
 		JMenuItem titem_Reload = new JMenuItem(oNavi.TheTranslations.get("Reload"));
+		JMenuItem titem_Log = new JMenuItem(oNavi.TheTranslations.get("Log"));
 		JMenuItem titem_Home = new JMenuItem(oNavi.TheTranslations.get("Homepage"));
 		JMenuItem titem_Update = new JMenuItem(oNavi.TheTranslations.get("Update"));
 		JMenuItem titem_About = new JMenuItem(oNavi.TheTranslations.get("About"));
 		JMenuItem titem_ShowWindow = new JMenuItem(oNavi.TheTranslations.get("Show", "Window"));
 		JMenuItem titem_Maximize = new JMenuItem(oNavi.TheTranslations.get("Maximize"));
 		JMenuItem titem_AlwaysOnTop = new JMenuItem(oNavi.TheTranslations.get("AlwaysOnTop"));
+		JMenuItem titem_OpaqueOnFocus = new JCheckBoxMenuItem(oNavi.TheTranslations.get("Enable", "Focused"));
 		JMenuItem titem_Minimize = new JMenuItem(oNavi.TheTranslations.get("Minimize"));
 		JMenuItem titem_MinimizeToTray = new JMenuItem(oNavi.TheTranslations.get("Minimize", "Tray"));
 		JMenuItem titem_Miniaturize = new JMenuItem(oNavi.TheTranslations.get("Miniaturize"));
@@ -993,10 +988,12 @@ public class Menu {
 		JMenuItem titem_ExitTray = new JMenuItem(oNavi.TheTranslations.get("Exit"));
 		
 		tmenu_Opacity.setIcon(Navi.getIcon("opacity"));
+		tmenu_OpacityFocused.setIcon(Navi.getIcon("opacity"));
 		titem_NewWindow.setIcon(Navi.getIcon("newwindow"));
 		tmenu_Window.setIcon(Navi.getIcon("window"));
 		tmenu_Navigation.setIcon(Navi.getIcon("navigation"));
 		titem_Reload.setIcon(Navi.getIcon("br_reload"));
+		titem_Log.setIcon(Navi.getIcon("log"));
 		titem_Home.setIcon(Navi.getIcon("home"));
 		titem_Update.setIcon(Navi.getIcon("update"));
 		titem_About.setIcon(Navi.getIcon("about"));
@@ -1011,28 +1008,37 @@ public class Menu {
 		titem_ExitTray.setIcon(Navi.getIcon("exit"));
 		
 		tmenu_Opacity.setMnemonic(KeyEvent.VK_A);
+		tmenu_OpacityFocused.setMnemonic(KeyEvent.VK_F);
 		tmenu_Window.setMnemonic(KeyEvent.VK_I);
 		tmenu_Navigation.setMnemonic(KeyEvent.VK_N);
 		titem_NewWindow.setMnemonic(KeyEvent.VK_W);
 		titem_Reload.setMnemonic(KeyEvent.VK_R);
+		titem_Log.setMnemonic(KeyEvent.VK_L);
 		titem_Home.setMnemonic(KeyEvent.VK_H);
 		titem_Update.setMnemonic(KeyEvent.VK_U);
 		titem_About.setMnemonic(KeyEvent.VK_B);
 		titem_ShowWindow.setMnemonic(KeyEvent.VK_W);
 		titem_Maximize.setMnemonic(KeyEvent.VK_E);
 		titem_AlwaysOnTop.setMnemonic(KeyEvent.VK_Y);
+		titem_OpaqueOnFocus.setMnemonic(KeyEvent.VK_F);
 		titem_Minimize.setMnemonic(KeyEvent.VK_M);
 		titem_MinimizeToTray.setMnemonic(KeyEvent.VK_T);
 		titem_Miniaturize.setMnemonic(KeyEvent.VK_Z);
-		titem_AlignKnob.setMnemonic(KeyEvent.VK_L);
+		titem_AlignKnob.setMnemonic(KeyEvent.VK_G);
 		titem_Exit.setMnemonic(KeyEvent.VK_X);
 		titem_ExitTray.setMnemonic(KeyEvent.VK_X);
 
 		if (isProjection)
 		{
-			// Options submenu exclusively for projection
 			JMenu tmenu_Options = new JMenu(oNavi.TheTranslations.get("Options"));
 			tmenu_Options.setIcon(Navi.getIcon("options"));
+			// Projection opacity focused submenu
+			tmenu_Options.add(tmenu_OpacityFocused);
+			tmenu_OpacityFocused.add(titem_OpaqueOnFocus);
+			titem_OpaqueOnFocus.setSelected(oNavi.TheOptions.wantProjectionOpacityOnFocus);
+			createOpacityList(OpacityType.ProjectionFocused, tmenu_OpacityFocused);
+			tmenu_Options.addSeparator();
+			// Options submenu exclusively for projection
 			tmenu_Options.setMnemonic(KeyEvent.VK_S);
 			tmenu_Options.add(item_EnableKnobMoveable);
 			tmenu_Options.add(item_EnableKnobBig);
@@ -1044,11 +1050,12 @@ public class Menu {
 			// The knob is the main way of interacting with the overlay frame
 			oNavi.TheKnobPopup = new JPopupMenu();
 			oNavi.TheKnobPopup.add(tmenu_Opacity);
-			oNavi.TheKnobPopup.add(menu_Cursor);
 			oNavi.TheKnobPopup.add(tmenu_Window);
+			oNavi.TheKnobPopup.add(menu_Cursor);
 			oNavi.TheKnobPopup.addSeparator();
 			oNavi.TheKnobPopup.add(titem_NewWindow);
 			oNavi.TheKnobPopup.add(titem_Reload);
+			oNavi.TheKnobPopup.add(titem_Log);
 			oNavi.TheKnobPopup.addSeparator();
 			oNavi.TheKnobPopup.add(titem_Home);
 			oNavi.TheKnobPopup.add(titem_Update);
@@ -1057,12 +1064,30 @@ public class Menu {
 			oNavi.TheKnobPopup.add(tmenu_Options);
 			oNavi.TheKnobPopup.addSeparator();
 			oNavi.TheKnobPopup.add(titem_Exit);
-			createOpacityList(OpacityType.Projection, tmenu_Opacity);
+			createOpacityList(OpacityType.ProjectionUnfocused, tmenu_Opacity);
 			
 			// Knob submenu
 			tmenu_Window.add(titem_Minimize);
 			tmenu_Window.add(titem_MinimizeToTray);
 			tmenu_Window.add(titem_AlignKnob);
+			
+			// Opacity on Focus option
+			titem_OpaqueOnFocus.addItemListener((ItemEvent e) ->
+			{
+				if (e.getStateChange() == ItemEvent.SELECTED)
+				{
+					oNavi.TheOptions.set_wantProjectionOpacityOnFocus(true);
+					if (oNavi.TheProjection.isFocused())
+					{
+						oNavi.TheProjection.setOpacity(oNavi.TheOptions.PROJECTION_OPACITY_FOCUSED);
+					}
+				}
+				else
+				{
+					oNavi.TheOptions.set_wantProjectionOpacityOnFocus(false);
+					oNavi.TheProjection.setOpacity(oNavi.TheOptions.PROJECTION_OPACITY_UNFOCUSED);
+				}
+			});
 			
 			// Tray menu actions are limited because the knob contains those actions already
 			TrayPopup.add(titem_ShowWindow);
@@ -1089,6 +1114,10 @@ public class Menu {
 		titem_Reload.addActionListener((ActionEvent e) ->
 		{
 			oNavi.TheBrowser.reloadIgnoreCache();
+		});
+		titem_Log.addActionListener((ActionEvent e) ->
+		{
+			oNavi.showLog();
 		});
 		titem_Home.addActionListener((ActionEvent e) ->
 		{
@@ -1207,7 +1236,7 @@ public class Menu {
 		}
 		catch (AWTException e)
 		{
-			System.out.println("TrayIcon could not be added.");
+			oNavi.addLog("TrayIcon could not be added.");
 		}
 	}
 	
@@ -1224,8 +1253,7 @@ public class Menu {
 
 		for (int i = 0; i < oNavi.OPACITY_LEVELS_10; i++)
 		{
-			tempradioitem = new JRadioButtonMenuItem(Integer
-				.toString(oNavi.OPACITY_LEVELS_10 * (oNavi.OPACITY_LEVELS_10 - i)) + "%");
+			tempradioitem = new JRadioButtonMenuItem(Integer.toString(oNavi.OPACITY_LEVELS_10 * (oNavi.OPACITY_LEVELS_10 - i)) + "%");
 			if (i == 0)
 			{
 				tempradioitem.setMnemonic('0');
@@ -1255,10 +1283,15 @@ public class Menu {
 								oNavi.TheOptions.set_OPACITY_UNFOCUSED(selectedopacity);
 								oNavi.TheFrame.setOpacity(oNavi.TheOptions.OPACITY_UNFOCUSED);
 							} break;
-							case Projection:
+							case ProjectionFocused:
 							{
-								oNavi.TheOptions.set_OPACITY_PROJECTION(selectedopacity);
-								oNavi.TheProjection.setOpacity(oNavi.TheOptions.OPACITY_PROJECTION);
+								oNavi.TheOptions.set_PROJECTION_OPACITY_FOCUSED(selectedopacity);
+								oNavi.TheProjection.setOpacity(oNavi.TheOptions.PROJECTION_OPACITY_FOCUSED);
+							} break;
+							case ProjectionUnfocused:
+							{
+								oNavi.TheOptions.set_PROJECTION_OPACITY_UNFOCUSED(selectedopacity);
+								oNavi.TheProjection.setOpacity(oNavi.TheOptions.PROJECTION_OPACITY_UNFOCUSED);
 							} break;
 						}
 					}
@@ -1280,9 +1313,13 @@ public class Menu {
 			{
 				opacityselected = oNavi.TheOptions.OPACITY_UNFOCUSED;
 			} break;
-			case Projection:
+			case ProjectionFocused:
 			{
-				opacityselected = oNavi.TheOptions.OPACITY_PROJECTION;
+				opacityselected = oNavi.TheOptions.PROJECTION_OPACITY_FOCUSED;
+			} break;
+			case ProjectionUnfocused:
+			{
+				opacityselected = oNavi.TheOptions.PROJECTION_OPACITY_UNFOCUSED;
 			} break;
 		}
 		item_OpacityArraylist.get(oNavi.OPACITY_LEVELS_10 - (int)(opacityselected * oNavi.OPACITY_LEVELS_10)).setSelected(true);
@@ -1295,7 +1332,8 @@ public class Menu {
 	{
 		WindowFocused,
 		WindowUnfocused,
-		Projection
+		ProjectionFocused,
+		ProjectionUnfocused
 	}
 
 	/**
