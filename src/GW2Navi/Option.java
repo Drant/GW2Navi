@@ -48,7 +48,8 @@ public class Option {
 	String LANGUAGE;
 	int BORDER_THICKNESS;
 	int ZOOM_STARTUP_DELAY;
-	float ZOOM_DEFAULT_LEVEL;
+	float ZOOM_LEVEL;
+	float PROJECTION_ZOOM_LEVEL;
 	float OPACITY_FOCUSED;
 	float OPACITY_UNFOCUSED;
 	float PROJECTION_OPACITY_FOCUSED;
@@ -57,6 +58,7 @@ public class Option {
 	boolean wantNativeInterface;
 	boolean wantOpacityOnFocus;
 	boolean wantProjectionOpacityOnFocus;
+	boolean wantProjectionMaximized;
 	boolean wantAlwaysOnTop;
 	boolean wantNavbar;
 	boolean wantLastVisited;
@@ -78,9 +80,11 @@ public class Option {
 	Dimension FRAME_QUICK_4;
 	Dimension FRAME_QUICK_A;
 	Dimension FRAME_QUICK_B;
+	Dimension PROJECTION_MINIMUM;
 	
 	WindowPreset WINDOWPRESET_START;
 	WindowPreset[] WINDOWPRESET_USER = new WindowPreset[8];
+	WindowPreset WINDOWPRESET_PROJECTION;
 	WindowPreset WINDOWPRESET_KNOB;
 	WindowPreset WINDOWPRESET_KNOB_BIG;
 	ColorPreset COLORPRESET_START;
@@ -139,7 +143,8 @@ public class Option {
 		LANGUAGE = preferences.get("LANGUAGE");
 		BORDER_THICKNESS = Integer.parseInt(preferences.get("BORDER_THICKNESS"));
 		ZOOM_STARTUP_DELAY = Integer.parseInt(preferences.get("ZOOM_STARTUP_DELAY"));
-		ZOOM_DEFAULT_LEVEL = Float.parseFloat(preferences.get("ZOOM_DEFAULT_LEVEL"));
+		ZOOM_LEVEL = Float.parseFloat(preferences.get("ZOOM_LEVEL"));
+		PROJECTION_ZOOM_LEVEL = Float.parseFloat(preferences.get("PROJECTION_ZOOM_LEVEL"));
 		OPACITY_FOCUSED = Float.parseFloat(preferences.get("OPACITY_FOCUSED"));
 		OPACITY_UNFOCUSED = Float.parseFloat(preferences.get("OPACITY_UNFOCUSED"));
 		PROJECTION_OPACITY_FOCUSED = Float.parseFloat(preferences.get("PROJECTION_OPACITY_FOCUSED"));
@@ -148,6 +153,7 @@ public class Option {
 		wantNativeInterface = Boolean.parseBoolean(preferences.get("wantNativeInterface"));
 		wantOpacityOnFocus = Boolean.parseBoolean(preferences.get("wantOpacityOnFocus"));
 		wantProjectionOpacityOnFocus = Boolean.parseBoolean(preferences.get("wantProjectionOpacityOnFocus"));
+		wantProjectionMaximized = Boolean.parseBoolean(preferences.get("wantProjectionMaximized"));
 		wantAlwaysOnTop = Boolean.parseBoolean(preferences.get("wantAlwaysOnTop"));
 		wantNavbar = Boolean.parseBoolean(preferences.get("wantNavbar"));
 		wantLastVisited = Boolean.parseBoolean(preferences.get("wantLastVisited"));
@@ -169,6 +175,7 @@ public class Option {
 		FRAME_QUICK_4 = WindowPreset.parseDimension(standarddimensions.get("FRAME_QUICK_4"));
 		FRAME_QUICK_A = WindowPreset.parseDimension(standarddimensions.get("FRAME_QUICK_A"));
 		FRAME_QUICK_B = WindowPreset.parseDimension(standarddimensions.get("FRAME_QUICK_B"));
+		PROJECTION_MINIMUM = WindowPreset.parseDimension(standarddimensions.get("PROJECTION_MINIMUM"));
 		
 		WINDOWPRESET_START = new WindowPreset(windowpresets.get("WINDOWPRESET_START"));
 		WINDOWPRESET_USER[0] = new WindowPreset(windowpresets.get("WINDOWPRESET_USER0"));
@@ -179,6 +186,7 @@ public class Option {
 		WINDOWPRESET_USER[5] = new WindowPreset(windowpresets.get("WINDOWPRESET_USER5"));
 		WINDOWPRESET_USER[6] = new WindowPreset(windowpresets.get("WINDOWPRESET_USER6"));
 		WINDOWPRESET_USER[7] = new WindowPreset(windowpresets.get("WINDOWPRESET_USER7"));
+		WINDOWPRESET_PROJECTION = new WindowPreset(windowpresets.get("WINDOWPRESET_PROJECTION"));
 		WINDOWPRESET_KNOB = new WindowPreset(windowpresets.get("WINDOWPRESET_KNOB"));
 		WINDOWPRESET_KNOB_BIG = new WindowPreset(windowpresets.get("WINDOWPRESET_KNOB_BIG"));
 		
@@ -231,10 +239,16 @@ public class Option {
 		preferences.put("BORDER_THICKNESS", pValue);
 	}
 	
-	public void set_ZOOM_DEFAULT_LEVEL(float pValue)
+	public void set_ZOOM_LEVEL(float pValue)
 	{
-		ZOOM_DEFAULT_LEVEL = pValue;
-		preferences.put("ZOOM_DEFAULT_LEVEL", pValue);
+		ZOOM_LEVEL = pValue;
+		preferences.put("ZOOM_LEVEL", pValue);
+	}
+	
+	public void set_PROJECTION_ZOOM_LEVEL(float pValue)
+	{
+		PROJECTION_ZOOM_LEVEL = pValue;
+		preferences.put("PROJECTION_ZOOM_LEVEL", pValue);
 	}
 	
 	public void set_wantSingleInstance(boolean pValue)
@@ -259,6 +273,12 @@ public class Option {
 	{
 		wantProjectionOpacityOnFocus = pValue;
 		preferences.put("wantProjectionOpacityOnFocus", pValue);
+	}
+	
+	public void set_wantProjectionMaximized(boolean pValue)
+	{
+		wantProjectionMaximized = pValue;
+		preferences.put("wantProjectionMaximized", pValue);
 	}
 	
 	public void set_wantAlwaysOnTop(boolean pValue)
@@ -324,6 +344,11 @@ public class Option {
 	{
 		WINDOWPRESET_USER[pNumber] = pPreset;
 		windowpresets.put("WINDOWPRESET_USER" + Integer.toString(pNumber), pPreset.toString());
+	}
+	
+	public void set_WINDOWPRESET_PROJECTION(int pWidth, int pHeight, int pPosX, int pPosY)
+	{
+		windowpresets.put("WINDOWPRESET_PROJECTION", WindowPreset.getString(pWidth, pHeight, pPosX, pPosY));
 	}
 	
 	public void set_WINDOWPRESET_KNOB(int pWidth, int pHeight, int pPosX, int pPosY)

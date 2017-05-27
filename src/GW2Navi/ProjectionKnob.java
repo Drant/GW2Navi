@@ -17,16 +17,20 @@ import javax.swing.JWindow;
 
 public class ProjectionKnob extends JWindow implements MouseMotionListener, MouseListener {
 	
-	Option TheOptions;
-	JFrame TheProjection;
 	Navi oNavi;
 	
 	JLabel IconContainer;
 	ImageIcon Icon;
 	int width;
 	int height;
-	int X;
-	int Y;
+	int knobClickX;
+	int knobClickY;
+	int knobPosX;
+	int knobPosY;
+	int projectionWidth;
+	int projectionHeight;
+	int projectionMinWidth;
+	int projectionMinHeight;
 	int state = 0;
 	boolean isMoveable;
 	
@@ -37,9 +41,9 @@ public class ProjectionKnob extends JWindow implements MouseMotionListener, Mous
 	public ProjectionKnob(Navi pNavi)
 	{
 		oNavi = pNavi;
-		TheOptions = pNavi.TheOptions;
-		TheProjection = pNavi.TheProjection;
-		isMoveable = TheOptions.wantKnobMoveable;
+		isMoveable = oNavi.TheOptions.wantKnobMoveable;
+		projectionMinWidth = oNavi.TheOptions.PROJECTION_MINIMUM.width;
+		projectionMinHeight = oNavi.TheOptions.PROJECTION_MINIMUM.height;
 		initializeKnob();
 	}
 	
@@ -57,7 +61,7 @@ public class ProjectionKnob extends JWindow implements MouseMotionListener, Mous
 		 * The position should be initially set to 0,0 in the options file, so
 		 * this function can know to reposition the knob on first run.
 		 */
-		if (TheOptions.WINDOWPRESET_KNOB.PosX == 0 && TheOptions.WINDOWPRESET_KNOB.PosY == 0)
+		if (oNavi.TheOptions.WINDOWPRESET_KNOB.PosX == 0 && oNavi.TheOptions.WINDOWPRESET_KNOB.PosY == 0)
 		{
 			// Move to default position
 			alignKnob();
@@ -65,7 +69,7 @@ public class ProjectionKnob extends JWindow implements MouseMotionListener, Mous
 		else
 		{
 			// Move to previously saved position
-			this.setLocation(TheOptions.WINDOWPRESET_KNOB.PosX, TheOptions.WINDOWPRESET_KNOB.PosY);
+			this.setLocation(oNavi.TheOptions.WINDOWPRESET_KNOB.PosX, oNavi.TheOptions.WINDOWPRESET_KNOB.PosY);
 		}
 		this.setAlwaysOnTop(true);
 		this.setBackground(new Color(0, 0, 0, 0));
@@ -132,43 +136,105 @@ public class ProjectionKnob extends JWindow implements MouseMotionListener, Mous
 	 */
 	public void resetSize()
 	{
-		width = TheOptions.wantKnobBig ? TheOptions.WINDOWPRESET_KNOB_BIG.Width : TheOptions.WINDOWPRESET_KNOB.Width;
-		height = TheOptions.wantKnobBig ? TheOptions.WINDOWPRESET_KNOB_BIG.Height : TheOptions.WINDOWPRESET_KNOB.Height;
+		width = oNavi.TheOptions.wantKnobBig ? oNavi.TheOptions.WINDOWPRESET_KNOB_BIG.Width : oNavi.TheOptions.WINDOWPRESET_KNOB.Width;
+		height = oNavi.TheOptions.wantKnobBig ? oNavi.TheOptions.WINDOWPRESET_KNOB_BIG.Height : oNavi.TheOptions.WINDOWPRESET_KNOB.Height;
 		Icon = Navi.getIcon("knob", width, height);
 		IconContainer.setIcon(Icon);
 		this.setSize(width, height);
 	}
 	
 	@Override
-	public void mousePressed(MouseEvent e)
+	public void mousePressed(MouseEvent pEvent)
 	{
-		X = e.getX();
-		Y = e.getY();
+		Point point = getLocation();
+		knobPosX = point.x;
+		knobPosY = point.y;
+		knobClickX = pEvent.getX();
+		knobClickY = pEvent.getY();
+		projectionWidth = oNavi.TheProjection.getWidth();
+		projectionHeight = oNavi.TheProjection.getHeight();
 	}
 	@Override
-	public void mouseDragged(MouseEvent e)
+	public void mouseDragged(MouseEvent pEvent)
 	{
 		if (isMoveable)
 		{
-			Point p = getLocation();
-			setLocation(
-				p.x + (e.getX() - X),
-				p.y + (e.getY() - Y)
-			);
+			Point point = getLocation();
+			int diffX = (pEvent.getX() - knobClickX);
+			int diffY = (pEvent.getY() - knobClickY);
+			int projectionNewWidth;
+			int projectionNewHeight;
+			int knobNewX = point.x + diffX;
+			int knobNewY = point.y + diffY;
+			boolean wantKnobMove = true;
+			boolean wantProjectionMove = true;
+			
+			// Shift-Drag moves the projection
+			if (pEvent.isShiftDown())
+			{
+				oNavi.TheProjection.setLocation(point);
+				// Remember the projection as windowed
+				if (oNavi.TheOptions.wantProjectionMaximized)
+				{
+					oNavi.TheOptions.set_wantProjectionMaximized(false);
+				}
+			}
+			// Ctrl-Drag resizes the projection
+			else if (pEvent.isControlDown())
+			{
+				projectionNewWidth = projectionWidth - (point.x - knobPosX);
+				projectionNewHeight = projectionHeight - (point.y - knobPosY);
+				
+				if (projectionNewWidth >= projectionMinWidth && projectionNewHeight >= projectionMinHeight)
+				{
+					oNavi.TheProjection.setSize(projectionNewWidth, projectionNewHeight);
+					wantProjectionMove = true;
+				}
+				else if (projectionNewWidth >= projectionMinWidth)
+				{
+					oNavi.TheProjection.setSize(projectionNewWidth, oNavi.TheProjection.getHeight());
+					wantProjectionMove = true;
+					knobNewY = point.y;
+				}
+				else if (projectionNewHeight >= projectionMinHeight)
+				{
+					oNavi.TheProjection.setSize(oNavi.TheProjection.getWidth(), projectionNewHeight);
+					wantProjectionMove = true;
+					knobNewX = point.x;
+				}
+				else
+				{
+					wantKnobMove = false;
+				}
+				
+				if (wantProjectionMove)
+				{
+					oNavi.TheProjection.setLocation(point);
+				}
+				// Remember the projection as windowed
+				if (oNavi.TheOptions.wantProjectionMaximized)
+				{
+					oNavi.TheOptions.set_wantProjectionMaximized(false);
+				}
+			}
+			if (wantKnobMove)
+			{
+				setLocation(knobNewX, knobNewY);
+			}
 		}
 	}
 	@Override
-	public void mouseMoved(MouseEvent e) {}
+	public void mouseMoved(MouseEvent pEvent) {}
 	@Override
-	public void mouseClicked(MouseEvent e)
+	public void mouseClicked(MouseEvent pEvent)
 	{
-		if (e.getButton() == MouseEvent.BUTTON1)
+		if (pEvent.getButton() == MouseEvent.BUTTON1)
 		{
 			switch (state)
 			{
 				case 0: // Shown
 					updateKnobAppearance(1);
-					TheProjection.setVisible(true);
+					oNavi.TheProjection.setVisible(true);
 					oNavi.setClickable(false);
 					break;
 				case 1: // Shown but clickthrough
@@ -185,20 +251,20 @@ public class ProjectionKnob extends JWindow implements MouseMotionListener, Mous
 		this.setAlwaysOnTop(true);
 	}
 	@Override
-	public void mouseReleased(MouseEvent e)
+	public void mouseReleased(MouseEvent pEvent)
 	{
-		if (e.isPopupTrigger())
+		if (pEvent.isPopupTrigger())
 		{
-			oNavi.TheKnobPopup.show(e.getComponent(), e.getX(), e.getY());
+			oNavi.TheKnobPopup.show(pEvent.getComponent(), pEvent.getX(), pEvent.getY());
 		}
 	}
 	@Override
-	public void mouseEntered(MouseEvent e)
+	public void mouseEntered(MouseEvent pEvent)
 	{
 		IconContainer.setIcon(Navi.getIcon("knob_hover", width, height));
 	}
 	@Override
-	public void mouseExited(MouseEvent e)
+	public void mouseExited(MouseEvent pEvent)
 	{
 		IconContainer.setIcon(Icon);
 	}

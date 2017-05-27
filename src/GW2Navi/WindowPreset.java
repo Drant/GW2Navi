@@ -71,6 +71,17 @@ public class WindowPreset {
 	}
 	
 	/**
+	 * Loads a WindowPreset into a frame.
+	 * @param pFrame overlay frame or projection.
+	 * @param pPreset to use.
+	 */
+	public static void loadWindowPreset(JFrame pFrame, WindowPreset pPreset)
+	{
+		pFrame.setSize(pPreset.Width, pPreset.Height);
+		pFrame.setLocation(pPreset.PosX, pPreset.PosY);
+	}
+	
+	/**
 	 * Constructs this object directly from a JFrame.
 	 * @param pFrame to extract information.
 	 */

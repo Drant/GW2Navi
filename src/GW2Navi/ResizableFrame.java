@@ -211,7 +211,7 @@ public class ResizableFrame extends JFrame implements MouseMotionListener, Mouse
 			boolean W_Resize = getCursor().equals(cursors.RESIZE_W);
 			boolean S_Resize = getCursor().equals(cursors.RESIZE_S);
 			boolean SW_Resize = getCursor().equals(cursors.RESIZE_SW);
-			boolean setLocation = false;
+			boolean wantSetLocation = false;
 			int newWidth = e.getX();
 			int newHeight = e.getY();
 					
@@ -219,7 +219,7 @@ public class ResizableFrame extends JFrame implements MouseMotionListener, Mouse
 			{
 				newHeight = getHeight() - (newLocationY - oldLocationY);
 				newLocationX = (int) getLocation().getX();
-				setLocation = true;
+				wantSetLocation = true;
 			}
 			else if (E_Resize)
 			{
@@ -234,13 +234,13 @@ public class ResizableFrame extends JFrame implements MouseMotionListener, Mouse
 				newLocationX = (int) getLocation().getX();
 				newWidth = getWidth();
 				newHeight = getHeight() - (newLocationY - oldLocationY);
-				setLocation = true;
+				wantSetLocation = true;
 			}
 			else if (NW_Resize)
 			{
 				newWidth = getWidth() - (newLocationX - oldLocationX);
 				newHeight = getHeight() - (newLocationY - oldLocationY);
-				setLocation = true;
+				wantSetLocation = true;
 			}
 			else if (NE_Resize)
 			{
@@ -251,14 +251,14 @@ public class ResizableFrame extends JFrame implements MouseMotionListener, Mouse
 			{
 				newWidth = getWidth() - (newLocationX - oldLocationX);
 				newLocationY = (int) getLocation().getY();
-				setLocation = true;
+				wantSetLocation = true;
 			}
 			else if (W_Resize)
 			{
 				newWidth = getWidth() - (newLocationX - oldLocationX);
 				newLocationY = (int) getLocation().getY();
 				newHeight = getHeight();
-				setLocation = true;
+				wantSetLocation = true;
 			}
 			
 			if (newWidth >= screenUnboundedWidth || newWidth <= minWidth)
@@ -277,7 +277,7 @@ public class ResizableFrame extends JFrame implements MouseMotionListener, Mouse
 			{
 				this.setSize(newWidth, newHeight);
 							
-				if (setLocation)
+				if (wantSetLocation)
 				{
 					this.setLocation(newLocationX, newLocationY);
 				}

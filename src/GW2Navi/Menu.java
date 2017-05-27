@@ -108,8 +108,8 @@ public class Menu {
 		item_LastVisited = new JCheckBoxMenuItem(oNavi.TheTranslations.get("Enable", "LastVisited"));
 		item_EnableGPS = new JCheckBoxMenuItem(oNavi.TheTranslations.get("Enable") + " GPS");
 		item_EnableNative = new JCheckBoxMenuItem(oNavi.TheTranslations.get("Enable", "Native") + " GUI");
-		item_EnableKnobMoveable = new JCheckBoxMenuItem(oNavi.TheTranslations.get("Enable", "Moveable"));
-		item_EnableKnobBig = new JCheckBoxMenuItem(oNavi.TheTranslations.get("Enable", "Big"));
+		item_EnableKnobMoveable = new JCheckBoxMenuItem(oNavi.TheTranslations.get("Moveable", "Knob"));
+		item_EnableKnobBig = new JCheckBoxMenuItem(oNavi.TheTranslations.get("Big", "Knob"));
 		menu_OpacityFocused = new JMenu(oNavi.TheTranslations.get("Opacity", "Focused"));
 		menu_Cursor = new JMenu(oNavi.TheTranslations.get("Cursor"));
 		menu_Language = new JMenu(oNavi.TheTranslations.get("Language"));
@@ -977,13 +977,17 @@ public class Menu {
 		JMenuItem titem_Update = new JMenuItem(oNavi.TheTranslations.get("Update"));
 		JMenuItem titem_About = new JMenuItem(oNavi.TheTranslations.get("About"));
 		JMenuItem titem_ShowWindow = new JMenuItem(oNavi.TheTranslations.get("Show", "Window"));
+		JMenuItem titem_Windowed = new JMenuItem(oNavi.TheTranslations.get("Windowed"));
 		JMenuItem titem_Maximize = new JMenuItem(oNavi.TheTranslations.get("Maximize"));
 		JMenuItem titem_AlwaysOnTop = new JMenuItem(oNavi.TheTranslations.get("AlwaysOnTop"));
 		JMenuItem titem_OpaqueOnFocus = new JCheckBoxMenuItem(oNavi.TheTranslations.get("Enable", "Focused"));
 		JMenuItem titem_Minimize = new JMenuItem(oNavi.TheTranslations.get("Minimize"));
 		JMenuItem titem_MinimizeToTray = new JMenuItem(oNavi.TheTranslations.get("Minimize", "Tray"));
 		JMenuItem titem_Miniaturize = new JMenuItem(oNavi.TheTranslations.get("Miniaturize"));
-		JMenuItem titem_AlignKnob = new JMenuItem(oNavi.TheTranslations.get("Align"));
+		JMenuItem titem_AlignKnob = new JMenuItem(oNavi.TheTranslations.get("Align", "Knob"));
+		JMenuItem titem_ZoomIn = new JMenuItem(oNavi.TheTranslations.get("Zoom") + " +");
+		JMenuItem titem_ZoomDefault = new JMenuItem(oNavi.TheTranslations.get("Zoom") + " 100%");
+		JMenuItem titem_ZoomOut = new JMenuItem(oNavi.TheTranslations.get("Zoom") + " −");
 		JMenuItem titem_Exit = new JMenuItem(oNavi.TheTranslations.get("Exit"));
 		JMenuItem titem_ExitTray = new JMenuItem(oNavi.TheTranslations.get("Exit"));
 		
@@ -998,12 +1002,16 @@ public class Menu {
 		titem_Update.setIcon(Navi.getIcon("update"));
 		titem_About.setIcon(Navi.getIcon("about"));
 		titem_ShowWindow.setIcon(Navi.getIcon("window"));
-		titem_Maximize.setIcon(Navi.getIcon("maximize"));
+		titem_Windowed.setIcon(Navi.getIcon("presets"));
+		titem_Maximize.setIcon(Navi.getIcon((isProjection) ? "projection" : "maximize"));
 		titem_AlwaysOnTop.setIcon(Navi.getIcon("alwaysontop"));
 		titem_Minimize.setIcon(Navi.getIcon("minimizetotray"));
 		titem_MinimizeToTray.setIcon(Navi.getIcon("minimizetotray"));
 		titem_Miniaturize.setIcon(Navi.getIcon("minimize"));
 		titem_AlignKnob.setIcon(Navi.getIcon("align"));
+		titem_ZoomIn.setIcon(Navi.getIcon("br_zoomin"));
+		titem_ZoomDefault.setIcon(Navi.getIcon("br_zoomdefault"));
+		titem_ZoomOut.setIcon(Navi.getIcon("br_zoomout"));
 		titem_Exit.setIcon(Navi.getIcon("exit"));
 		titem_ExitTray.setIcon(Navi.getIcon("exit"));
 		
@@ -1018,6 +1026,7 @@ public class Menu {
 		titem_Update.setMnemonic(KeyEvent.VK_U);
 		titem_About.setMnemonic(KeyEvent.VK_B);
 		titem_ShowWindow.setMnemonic(KeyEvent.VK_W);
+		titem_Windowed.setMnemonic(KeyEvent.VK_D);
 		titem_Maximize.setMnemonic(KeyEvent.VK_E);
 		titem_AlwaysOnTop.setMnemonic(KeyEvent.VK_Y);
 		titem_OpaqueOnFocus.setMnemonic(KeyEvent.VK_F);
@@ -1067,9 +1076,16 @@ public class Menu {
 			createOpacityList(OpacityType.ProjectionUnfocused, tmenu_Opacity);
 			
 			// Knob submenu
+			tmenu_Window.add(titem_Windowed);
+			tmenu_Window.add(titem_Maximize);
+			tmenu_Window.addSeparator();
 			tmenu_Window.add(titem_Minimize);
 			tmenu_Window.add(titem_MinimizeToTray);
 			tmenu_Window.add(titem_AlignKnob);
+			tmenu_Window.addSeparator();
+			tmenu_Window.add(titem_ZoomIn);
+			tmenu_Window.add(titem_ZoomDefault);
+			tmenu_Window.add(titem_ZoomOut);
 			
 			// Opacity on Focus option
 			titem_OpaqueOnFocus.addItemListener((ItemEvent e) ->
@@ -1146,9 +1162,20 @@ public class Menu {
 		{
 			oNavi.toggleFrame(true);
 		});
+		titem_Windowed.addActionListener((ActionEvent e) ->
+		{
+			oNavi.toggleProjectionMaximize(false);
+		});
 		titem_Maximize.addActionListener((ActionEvent e) ->
 		{
-			oNavi.toggleMaximize();
+			if (isProjection)
+			{
+				oNavi.toggleProjectionMaximize(true);
+			}
+			else
+			{
+				oNavi.toggleFrameMaximize();
+			}
 		});
 		titem_AlwaysOnTop.addActionListener((ActionEvent e) ->
 		{
@@ -1179,6 +1206,18 @@ public class Menu {
 		{
 			oNavi.toggleFrame(true);
 			oNavi.TheKnob.alignKnob();
+		});
+		titem_ZoomIn.addActionListener((ActionEvent e) ->
+		{
+			oNavi.TheBrowser.setZoomLevel(++oNavi.TheOptions.PROJECTION_ZOOM_LEVEL);
+		});
+		titem_ZoomDefault.addActionListener((ActionEvent e) ->
+		{
+			oNavi.TheBrowser.setZoomLevel(oNavi.TheOptions.PROJECTION_ZOOM_LEVEL = oNavi.TheBrowserWrapper.ZOOM_LEVEL_DEFAULT);
+		});
+		titem_ZoomOut.addActionListener((ActionEvent e) ->
+		{
+			oNavi.TheBrowser.setZoomLevel(--oNavi.TheOptions.PROJECTION_ZOOM_LEVEL);
 		});
 		titem_Exit.addActionListener((ActionEvent e) ->
 		{

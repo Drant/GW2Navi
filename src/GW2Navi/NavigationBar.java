@@ -23,6 +23,7 @@ import org.cef.browser.CefBrowser;
 @SuppressWarnings("serial")
 public class NavigationBar extends JPanel {
 	
+	Navi oNavi;
 	private final JButton btnBack;
 	private final JButton btnForward;
 	private final JButton btnReload;
@@ -32,28 +33,21 @@ public class NavigationBar extends JPanel {
 	private final JButton btnZoomIn;
 	private final JButton btnZoomDefault;
 	private final JButton btnZoomOut;
-	private double zoomLevel = 0;
 	private final Dimension dimenButton = new Dimension(32, 16);
 	private final Dimension dimenButtonWide = new Dimension(48, 16);
 	private final Dimension dimenButtonZoomDefault = new Dimension(52, 16);
 	
-	// Dependence
-	CefBrowser TheBrowser;
-	Option TheOptions;
-	
-	public NavigationBar(CefBrowser pBrowser, Option pOption)
+	public NavigationBar(Navi pNavi)
 	{
-		TheBrowser = pBrowser;
-		TheOptions = pOption;
-		setEnabled(TheBrowser != null);
+		oNavi = pNavi;
+		setEnabled(oNavi.TheBrowser != null);
 		setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-		zoomLevel = TheOptions.ZOOM_DEFAULT_LEVEL;
 		
 		// BACK BUTTON
 		btnBack = createNavbutton("br_back", dimenButtonWide);
 		btnBack.addActionListener((ActionEvent e) ->
 		{
-			TheBrowser.goBack();
+			oNavi.TheBrowser.goBack();
 		});
 		add(btnBack);
 		add(Box.createHorizontalStrut(4)); // Padding
@@ -62,7 +56,7 @@ public class NavigationBar extends JPanel {
 		btnForward = createNavbutton("br_forward", dimenButtonWide);
 		btnForward.addActionListener((ActionEvent e) ->
 		{
-			TheBrowser.goForward();
+			oNavi.TheBrowser.goForward();
 		});
 		add(btnForward);
 		add(Box.createHorizontalStrut(4));
@@ -75,11 +69,11 @@ public class NavigationBar extends JPanel {
 			int mask = OS.isMacintosh() ? ActionEvent.META_MASK : ActionEvent.CTRL_MASK;
 			if ((e.getModifiers() & mask) != 0)
 			{
-				TheBrowser.reloadIgnoreCache();
+				oNavi.TheBrowser.reloadIgnoreCache();
 			}
 			else
 			{
-				TheBrowser.reload();
+				oNavi.TheBrowser.reload();
 			}
 		});
 		add(btnReload);
@@ -89,7 +83,7 @@ public class NavigationBar extends JPanel {
 		JButton goButton = createNavbutton("br_go");
 		goButton.addActionListener((ActionEvent e) ->
 		{
-			TheBrowser.loadURL(getAddress());
+			oNavi.TheBrowser.loadURL(getAddress());
 		});
 		add(goButton);
 		add(Box.createHorizontalStrut(4));
@@ -99,7 +93,7 @@ public class NavigationBar extends JPanel {
 		fldAddress.setAlignmentX(LEFT_ALIGNMENT);
 		fldAddress.addActionListener((ActionEvent e) ->
 		{
-			TheBrowser.loadURL(getAddress());
+			oNavi.TheBrowser.loadURL(getAddress());
 		});
 		fldAddress.addMouseListener(new MouseAdapter()
 		{
@@ -119,27 +113,27 @@ public class NavigationBar extends JPanel {
 		add(Box.createHorizontalStrut(4));
 		
 		// ZOOM DEFAULT BUTTON
-		btnZoomDefault = new JButton(Double.toString(zoomLevel)); // Also acts as zoom label
+		btnZoomDefault = new JButton(Double.toString(oNavi.TheOptions.ZOOM_LEVEL)); // Also acts as zoom label
 		btnZoomDefault.setFocusable(false);
 		btnZoomDefault.setPreferredSize(dimenButtonZoomDefault);
 		btnZoomDefault.addActionListener((ActionEvent e) ->
 		{
-			TheBrowser.setZoomLevel(zoomLevel = 0);
-			btnZoomDefault.setText(Double.toString(zoomLevel));
+			oNavi.TheBrowser.setZoomLevel(oNavi.TheOptions.ZOOM_LEVEL = oNavi.TheBrowserWrapper.ZOOM_LEVEL_DEFAULT);
+			btnZoomDefault.setText(Double.toString(oNavi.TheOptions.ZOOM_LEVEL));
 		});
 		// ZOOM OUT BUTTON
 		btnZoomOut = createNavbutton("br_zoomout");
 		btnZoomOut.addActionListener((ActionEvent e) ->
 		{
-			TheBrowser.setZoomLevel(--zoomLevel);
-			btnZoomDefault.setText(Double.toString(zoomLevel));
+			oNavi.TheBrowser.setZoomLevel(--oNavi.TheOptions.ZOOM_LEVEL);
+			btnZoomDefault.setText(Double.toString(oNavi.TheOptions.ZOOM_LEVEL));
 		});
 		// ZOOM IN BUTTON
 		btnZoomIn = createNavbutton("br_zoomin");
 		btnZoomIn.addActionListener((ActionEvent e) ->
 		{
-			TheBrowser.setZoomLevel(++zoomLevel);
-			btnZoomDefault.setText(Double.toString(zoomLevel));
+			oNavi.TheBrowser.setZoomLevel(++oNavi.TheOptions.ZOOM_LEVEL);
+			btnZoomDefault.setText(Double.toString(oNavi.TheOptions.ZOOM_LEVEL));
 		});
 		// Add zoom buttons
 		add(btnZoomOut);
@@ -178,7 +172,7 @@ public class NavigationBar extends JPanel {
 	 */
 	public void update(CefBrowser browser, boolean isLoading, boolean canGoBack, boolean canGoForward)
 	{
-		if (browser == TheBrowser)
+		if (browser == oNavi.TheBrowser)
 		{
 			btnBack.setEnabled(canGoBack);
 			btnForward.setEnabled(canGoForward);
@@ -216,7 +210,7 @@ public class NavigationBar extends JPanel {
 		}
 		catch (URISyntaxException e1)
 		{
-			address = TheOptions.URL_SEARCH.replaceAll(SEARCH_SUBSTITUTE, address);
+			address = oNavi.TheOptions.URL_SEARCH.replaceAll(SEARCH_SUBSTITUTE, address);
 		}
 		return address;
 	}
@@ -228,7 +222,7 @@ public class NavigationBar extends JPanel {
 	 */
 	public void setAddress(CefBrowser browser, String address)
 	{
-		if (browser == TheBrowser)
+		if (browser == oNavi.TheBrowser)
 		{
 			fldAddress.setText(address);
 		}

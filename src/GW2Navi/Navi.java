@@ -2,7 +2,7 @@ package GW2Navi;
 
 /**
  * Navi.java GUI controller and overlay frame for displaying gw2timer.com.
- * Originally used DJ Native Swing by Christopher Deckers, and replaced to
+ * Originally used DJ Native Swing by Christopher Deckers, and replaced with
  * Chromium Embedded Framework by Marshall Greenblatt. Original JCEF port thanks
  * to Farly Fitrian Dwiputra. Resizable frame code from post by Iovcev Elena.
  * Inline citations provided for copy and pasted snippets.
@@ -56,7 +56,7 @@ public final class Navi extends JPanel {
 	
 	// Meta
 	boolean isDebug = false;
-	final static String PROGRAM_VERSION = "2017.05.20";
+	final static String PROGRAM_VERSION = "2017.05.27";
 	final static String PROGRAM_NAME = "GW2Navi";
 	final static String PROGRAM_NAME_PROJECTION = "GW2Navi 3D";
 	final static String PROGRAM_NAME_CURSOR = "GW2Navi Cursor";
@@ -150,6 +150,8 @@ public final class Navi extends JPanel {
 		+ "<br />"
 		+ "Right click the knob for the <b>overlay menu</b>.<br />"
 		+ "Drag the knob to move it to an accessible and unintrusive place on screen.<br />"
+		+ "Hold Shift + Drag the knob to move the projection.<br />"
+		+ "Hold Ctrl + Drag the knob to resize the projection.<br />"
 		+ "<br />"
 		+ "<h2>Projection Usage:</h2>"
 		+ "The projection is the website layer over the game layer.<br />"
@@ -294,7 +296,7 @@ public final class Navi extends JPanel {
 		{
 			if (isGPSStarted == false)
 			{
-				TheGPS = new GPS(this, TheBrowserWrapper);
+				TheGPS = new GPS(this);
 				Thread gpsThread = new Thread(TheGPS);
 				gpsThread.start();
 				isGPSStarted = true;
@@ -354,7 +356,7 @@ public final class Navi extends JPanel {
 	}
 	
 	/**
-	 * Initializes an uncustomizable browser frame that is always fullscreen.
+	 * Initializes a borderless see-through browser frame.
 	 */
 	protected void createProjection()
 	{
@@ -370,8 +372,7 @@ public final class Navi extends JPanel {
 		TheProjection.setBackground(new Color(0, 0, 0, 0)); 
 		TheProjection.setOpacity(TheOptions.PROJECTION_OPACITY_FOCUSED);
 		TheProjection.setVisible(true);
-		TheProjection.setSize(RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
-		TheProjection.setExtendedState(JFrame.MAXIMIZED_BOTH); // Maximized will make it overlap the taskbar, which is desired for fullscreen
+		toggleProjectionMaximize(TheOptions.wantProjectionMaximized);
 		// Behavior
 		TheProjection.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		TheProjection.addWindowListener(new WindowAdapter()
@@ -518,9 +519,27 @@ public final class Navi extends JPanel {
 	/**
 	 * Maximizes the frame or restores if already maximized.
 	 */
-	public void toggleMaximize()
+	public void toggleFrameMaximize()
 	{
 		TheFrame.headerDoubleClickResize();
+	}
+	
+	/**
+	 * Toggles the projection between maximized and windowed size.
+	 * @param pBoolean true for maximized.
+	 */
+	public void toggleProjectionMaximize(boolean pBoolean)
+	{
+		if (pBoolean)
+		{
+			TheProjection.setSize(RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
+			TheProjection.setExtendedState(JFrame.MAXIMIZED_BOTH); // Maximized will make it overlap the taskbar, which is desired for fullscreen
+		}
+		else
+		{
+			WindowPreset.loadWindowPreset(TheProjection, TheOptions.WINDOWPRESET_PROJECTION);
+		}
+		TheOptions.set_wantProjectionMaximized(pBoolean);
 	}
 	
 	/**
@@ -539,14 +558,16 @@ public final class Navi extends JPanel {
 			if (TheOptions.wantNavbar)
 			{
 				TheFrame.setSize(new Dimension(
-						TheFrame.getWidth() + TheOptions.NAVBAR_THICKNESS * 2,
-						TheFrame.getHeight() + TheOptions.NAVBAR_HEIGHT));
+					TheFrame.getWidth() + TheOptions.NAVBAR_THICKNESS * 2,
+					TheFrame.getHeight() + TheOptions.NAVBAR_HEIGHT)
+				);
 			}
 			else
 			{
 				TheFrame.setSize(new Dimension(
-						TheFrame.getWidth() - TheOptions.NAVBAR_THICKNESS * 2,
-						TheFrame.getHeight() - TheOptions.NAVBAR_HEIGHT));
+					TheFrame.getWidth() - TheOptions.NAVBAR_THICKNESS * 2,
+					TheFrame.getHeight() - TheOptions.NAVBAR_HEIGHT)
+				);
 			}
 		}
 	}
@@ -557,8 +578,7 @@ public final class Navi extends JPanel {
 	 */
 	protected void loadWindowPreset(WindowPreset pPreset)
 	{
-		TheFrame.setSize(pPreset.Width, pPreset.Height);
-		TheFrame.setLocation(pPreset.PosX, pPreset.PosY);
+		WindowPreset.loadWindowPreset(TheFrame, pPreset);
 	}
 	
 	/**
@@ -954,14 +974,35 @@ public final class Navi extends JPanel {
 	 */
 	protected void saveOptions()
 	{
+		int width;
+		int height;
+		int posX;
+		int posY;
+		Point point;
+		
 		if (isProjection)
 		{
-			// Make sure position is not outside of screen
-			Point p = TheKnob.getLocation();
-			int posX = (p.x > 0 && p.x < RESOLUTION_WIDTH) ? p.x : 0;
-			int posY = (p.y > 0 && p.y < RESOLUTION_HEIGHT) ? p.y : 0;
-			// The knob's dimensions are never changed while running
-			TheOptions.set_WINDOWPRESET_KNOB(TheOptions.WINDOWPRESET_KNOB.Width, TheOptions.WINDOWPRESET_KNOB.Height, posX, posY);
+			// Make sure knob is not outside of screen
+			Point knobPoint = TheKnob.getLocation();
+			int knobPosX = (knobPoint.x > 0 && knobPoint.x < RESOLUTION_WIDTH) ? knobPoint.x : 0;
+			int knobPosY = (knobPoint.y > 0 && knobPoint.y < RESOLUTION_HEIGHT) ? knobPoint.y : 0;
+			TheOptions.set_WINDOWPRESET_KNOB(TheOptions.WINDOWPRESET_KNOB.Width, TheOptions.WINDOWPRESET_KNOB.Height, knobPosX, knobPosY);
+			
+			// Save projection's dimensions if windowed
+			if (TheOptions.wantProjectionMaximized == false)
+			{
+				// Make sure dimension is not zero or negative
+				width = (TheProjection.getWidth() > TheOptions.PROJECTION_MINIMUM.width) ? TheProjection.getWidth() : TheOptions.PROJECTION_MINIMUM.width;
+				height = (TheProjection.getHeight() > TheOptions.PROJECTION_MINIMUM.height) ? TheProjection.getHeight() : TheOptions.PROJECTION_MINIMUM.height;
+				// Make sure position is not outside of screen
+				point = TheProjection.getLocation();
+				posX = (point.x > 0 && point.x < RESOLUTION_WIDTH) ? point.x : 0;
+				posY = (point.y > 0 && point.y < RESOLUTION_HEIGHT) ? point.y : 0;
+				TheOptions.set_WINDOWPRESET_PROJECTION(width, height, posX, posY);
+			}
+			
+			// Save zoom level
+			TheOptions.set_PROJECTION_ZOOM_LEVEL((float) TheBrowser.getZoomLevel());
 		}
 		else
 		{
@@ -969,17 +1010,17 @@ public final class Navi extends JPanel {
 			if (isMiniaturized == false)
 			{
 				// Make sure dimension is not zero or negative
-				int width = (TheFrame.getWidth() > TheOptions.FRAME_MINIMUM.width) ? TheFrame.getWidth() : TheOptions.FRAME_MINIMUM.width;
-				int height = (TheFrame.getHeight() > TheOptions.FRAME_MINIMUM.height) ? TheFrame.getHeight() : TheOptions.FRAME_MINIMUM.height;
+				width = (TheFrame.getWidth() > TheOptions.FRAME_MINIMUM.width) ? TheFrame.getWidth() : TheOptions.FRAME_MINIMUM.width;
+				height = (TheFrame.getHeight() > TheOptions.FRAME_MINIMUM.height) ? TheFrame.getHeight() : TheOptions.FRAME_MINIMUM.height;
 				// Make sure position is not outside of screen
-				Point p = TheFrame.getLocation();
-				int posX = (p.x > 0 && p.x < RESOLUTION_WIDTH) ? p.x : 0;
-				int posY = (p.y > 0 && p.y < RESOLUTION_HEIGHT) ? p.y : 0;
+				point = TheFrame.getLocation();
+				posX = (point.x > 0 && point.x < RESOLUTION_WIDTH) ? point.x : 0;
+				posY = (point.y > 0 && point.y < RESOLUTION_HEIGHT) ? point.y : 0;
 				TheOptions.set_WINDOWPRESET_START(width, height, posX, posY);
 			}
 
 			// Save zoom level
-			TheOptions.set_ZOOM_DEFAULT_LEVEL((float) TheBrowser.getZoomLevel());
+			TheOptions.set_ZOOM_LEVEL((float) TheBrowser.getZoomLevel());
 
 			// Save last visited URL
 			TheOptions.set_URL_LASTVISITED(TheBrowserWrapper.sanitizeAddress(TheBrowser.getURL()));

@@ -35,10 +35,11 @@ public class BrowserWrapper {
 	protected CefClient JCEF_Client;
 	protected CefSettings JCEF_Settings;
 	protected CefBrowser JCEF_Browser;
+	public final static float ZOOM_LEVEL_DEFAULT = 0;
+	NavigationBar TheNavbar;
 	
 	// Dependence
-	NavigationBar TheNavbar;
-	Option TheOptions;
+	Navi oNavi;
 	
 	// Constants and limits
 	final String CACHE_FOLDER_NAME = "GW2Navi"; // Browser cache folder, absolute in %APPDATA%
@@ -49,7 +50,7 @@ public class BrowserWrapper {
 	// Constructor
 	public BrowserWrapper(Navi pNavi, boolean pIsProjection)
 	{
-		TheOptions = pNavi.TheOptions;
+		oNavi = pNavi;
 		boolean wantOffscreenRendering = false;
 		boolean wantTransparent = true;
 		
@@ -81,16 +82,16 @@ public class BrowserWrapper {
 
 		// Initialize browser settings
 		JCEF_Settings = new CefSettings();
-		JCEF_Settings.cache_path = (TheOptions.wantPortable) ? DIRECTORY_CACHE : new File(System.getenv("AppData"), CACHE_FOLDER_NAME).getAbsolutePath();
+		JCEF_Settings.cache_path = (oNavi.TheOptions.wantPortable) ? DIRECTORY_CACHE : new File(System.getenv("AppData"), CACHE_FOLDER_NAME).getAbsolutePath();
 		JCEF_Settings.windowless_rendering_enabled = false; // If set to true then the setMnemonic menu key shortcuts will not work
 		JCEF_App = CefApp.getInstance(args, JCEF_Settings);
 		
 		// Start browser
 		JCEF_Client = JCEF_App.createClient();
-		String loadUrl = sanitizeAddress((TheOptions.wantLastVisited) ? TheOptions.URL_LASTVISITED : TheOptions.URL_HOMEPAGE);
+		String loadUrl = sanitizeAddress((oNavi.TheOptions.wantLastVisited) ? oNavi.TheOptions.URL_LASTVISITED : oNavi.TheOptions.URL_HOMEPAGE);
 		if (pIsProjection)
 		{
-			loadUrl = TheOptions.URL_PROJECTION;
+			loadUrl = oNavi.TheOptions.URL_PROJECTION;
 		}
 		JCEF_Client.addContextMenuHandler(new ContextMenuHandler());
 		JCEF_Browser = JCEF_Client.createBrowser(loadUrl, wantOffscreenRendering, wantTransparent);
@@ -98,7 +99,7 @@ public class BrowserWrapper {
 		// Create navigation bar
 		if (pIsProjection == false)
 		{
-			TheNavbar = new NavigationBar(JCEF_Browser, TheOptions);
+			TheNavbar = new NavigationBar(oNavi);
 			JCEF_Client.addLoadHandler(new CefLoadHandlerAdapter()
 			{
 				@Override
@@ -123,7 +124,7 @@ public class BrowserWrapper {
 			@Override
 			public boolean onConsoleMessage(CefBrowser browser, String message, String source, int line)
 			{
-				pNavi.addLog("\"" + message + "\", source: " + source + " (" + line + ")");
+				oNavi.addLog("\"" + message + "\", source: " + source + " (" + line + ")");
 				return false;
 			}
 		});
@@ -132,15 +133,15 @@ public class BrowserWrapper {
 		webBrowserPanel.add(JCEF_Browser.getUIComponent(), BorderLayout.CENTER);
 		if (pIsProjection)
 		{
-			pNavi.setBackground(new Color(0, 0, 0, 0));
-			pNavi.setOpaque(false);
+			oNavi.setBackground(new Color(0, 0, 0, 0));
+			oNavi.setOpaque(false);
 		}
 		else
 		{
-			pNavi.add(TheNavbar, BorderLayout.NORTH);
+			oNavi.add(TheNavbar, BorderLayout.NORTH);
 			JCEF_Browser.getUIComponent().setFocusable(false); // Prevents the browser from taking focus from the frame
 		}
-		pNavi.add(webBrowserPanel, BorderLayout.CENTER);
+		oNavi.add(webBrowserPanel, BorderLayout.CENTER);
 		
 		// Have to wait for the browser to load before zoom works
 		Timer timer = new Timer();
@@ -149,9 +150,9 @@ public class BrowserWrapper {
 			@Override
 			public void run()
 			{
-				JCEF_Browser.setZoomLevel(TheOptions.ZOOM_DEFAULT_LEVEL);
+				JCEF_Browser.setZoomLevel((pIsProjection) ? oNavi.TheOptions.PROJECTION_ZOOM_LEVEL : oNavi.TheOptions.ZOOM_LEVEL);
 			}
-		}, TheOptions.ZOOM_STARTUP_DELAY);
+		}, oNavi.TheOptions.ZOOM_STARTUP_DELAY);
 	}
 	
 	/**
@@ -191,7 +192,7 @@ public class BrowserWrapper {
 		}
 		
 		// If illegal address then use default URL
-		return TheOptions.URL_HOMEPAGE;
+		return oNavi.TheOptions.URL_HOMEPAGE;
 	}
 	
 	/**
@@ -202,8 +203,8 @@ public class BrowserWrapper {
 	public boolean verifySite()
 	{
 		String currenturl = JCEF_Browser.getURL();
-		String sitedomain = TheOptions.URL_SITE;
-		String localdomain = TheOptions.URL_LOCAL;
+		String sitedomain = oNavi.TheOptions.URL_SITE;
+		String localdomain = oNavi.TheOptions.URL_LOCAL;
 		
 		// Checks if the substring from the beginning of the URL contains the match
 		if (currenturl.length() >= sitedomain.length())

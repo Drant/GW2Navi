@@ -35,20 +35,17 @@ public class GPS implements Runnable {
 	private byte[] context = new byte[0];
 	
 	// Overlay specific
-	BrowserWrapper TheBrowserWrapper;
-	Option TheOptions;
+	Navi oNavi;
 	public boolean wantLoop = true;
 	
 	// Constructor
-	public GPS(Navi pNavi, BrowserWrapper pBrowser)
+	public GPS(Navi pNavi)
 	{
+		oNavi = pNavi;
 		sharedFile = Kernel32.INSTANCE.CreateFileMapping(
 			WinBase.INVALID_HANDLE_VALUE, null, WinNT.PAGE_EXECUTE_READWRITE, 0, MEM_MAP_SIZE, MEM_MAP_NAME);
 		sharedMemory = Kernel32.INSTANCE.MapViewOfFile(
 			sharedFile, WinNT.SECTION_MAP_READ, 0, 0, MEM_MAP_SIZE);
-		
-		TheBrowserWrapper = pBrowser;
-		TheOptions = pNavi.TheOptions;
 	}
 
 	@Override
@@ -65,15 +62,15 @@ public class GPS implements Runnable {
 				identity = this.sharedMemory.getCharArray(592, 256);
 				final String indentitystr = sanitizeIdentity(new String(identity)).trim();
 				
-				if (TheBrowserWrapper.verifySite())
+				if (oNavi.TheBrowserWrapper.verifySite())
 				{
 					// Tell the website to update its global variables
-					String js = TheOptions.JS_GPS_POSITION + Arrays.toString(fAvatarPosition) + ";"
-						+ TheOptions.JS_GPS_DIRECTION + Arrays.toString(fAvatarFront) + ";"
-						+ TheOptions.JS_GPS_PERSPECTIVE + Arrays.toString(fCameraPosition) + ";"
-						+ TheOptions.JS_GPS_CAMERA + Arrays.toString(fCameraFront) + ";"
-						+ TheOptions.JS_GPS_IDENTITY + indentitystr + ";";
-					TheBrowserWrapper.executeJavaScript(js);
+					String js = oNavi.TheOptions.JS_GPS_POSITION + Arrays.toString(fAvatarPosition) + ";"
+						+ oNavi.TheOptions.JS_GPS_DIRECTION + Arrays.toString(fAvatarFront) + ";"
+						+ oNavi.TheOptions.JS_GPS_PERSPECTIVE + Arrays.toString(fCameraPosition) + ";"
+						+ oNavi.TheOptions.JS_GPS_CAMERA + Arrays.toString(fCameraFront) + ";"
+						+ oNavi.TheOptions.JS_GPS_IDENTITY + indentitystr + ";";
+					oNavi.TheBrowserWrapper.executeJavaScript(js);
 				}
 
 				// Original code with all API variables
@@ -105,7 +102,7 @@ public class GPS implements Runnable {
 				System.out.println("#####################################################");
 				*/
 
-				Thread.sleep(TheOptions.GPS_REFRESH_RATE);
+				Thread.sleep(oNavi.TheOptions.GPS_REFRESH_RATE);
 			}
 		}
 		catch (InterruptedException ex)
