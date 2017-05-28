@@ -56,7 +56,7 @@ public final class Navi extends JPanel {
 	
 	// Meta
 	boolean isDebug = false;
-	final static String PROGRAM_VERSION = "2017.05.27";
+	final static String PROGRAM_VERSION = "2017.05.28";
 	final static String PROGRAM_NAME = "GW2Navi";
 	final static String PROGRAM_NAME_PROJECTION = "GW2Navi 3D";
 	final static String PROGRAM_NAME_CURSOR = "GW2Navi Cursor";
@@ -73,6 +73,7 @@ public final class Navi extends JPanel {
 	
 	// GUI measurements and initial states
 	WindowPreset currentWindowPreset;
+	Point PROJECTION_DEFAULT_LOCATION = new Point(0, 0);
 	int ADD_VERTICAL_PIXELS;
 	int ADD_HORIZONTAL_PIXELS;
 	int BORDER_THICKNESS_TOTAL;
@@ -99,8 +100,8 @@ public final class Navi extends JPanel {
 	protected Bookmark TheBookmarks;
 
 	// Components
-	protected ResizableFrame TheFrame; // Windowed frame with resizable edges
-	protected JFrame TheProjection; // Fullscreen frame for 3D imagery
+	protected ResizableFrame TheFrame; // Framed window with resizable edges
+	protected JFrame TheProjection; // Fullscreen see-through frame for 3D imagery
 	protected ProjectionKnob TheKnob; // Draggable menu button for projection
 	protected JPanel TheContainer; // Container for windowed frame
 	protected JPanel TheBar; // The draggable top bar of the windowed frame that contains the menu
@@ -532,12 +533,18 @@ public final class Navi extends JPanel {
 	{
 		if (pBoolean)
 		{
+			// If switching from windowed to maximized, then save the current windowed dimensions
+			if (TheOptions.wantProjectionMaximized == false)
+			{
+				saveProjectionWindowPreset();
+			}
+			TheProjection.setLocation(PROJECTION_DEFAULT_LOCATION);
 			TheProjection.setSize(RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
 			TheProjection.setExtendedState(JFrame.MAXIMIZED_BOTH); // Maximized will make it overlap the taskbar, which is desired for fullscreen
 		}
 		else
 		{
-			WindowPreset.loadWindowPreset(TheProjection, TheOptions.WINDOWPRESET_PROJECTION);
+			WindowPreset.loadWindowPreset(TheProjection, TheOptions.WINDOWPRESET_PROJECTION_START);
 		}
 		TheOptions.set_wantProjectionMaximized(pBoolean);
 	}
@@ -573,12 +580,55 @@ public final class Navi extends JPanel {
 	}
 	
 	/**
+	 * Sanitizes and saves the WindowPreset for elements that use it.
+	 */
+	protected void saveKnobWindowPreset()
+	{
+		// Make sure knob is not outside of screen
+		Point knobPoint = TheKnob.getLocation();
+		int knobPosX = (knobPoint.x > 0 && knobPoint.x < RESOLUTION_WIDTH) ? knobPoint.x : 0;
+		int knobPosY = (knobPoint.y > 0 && knobPoint.y < RESOLUTION_HEIGHT) ? knobPoint.y : 0;
+		TheOptions.set_WINDOWPRESET_KNOB(TheOptions.WINDOWPRESET_KNOB.Width, TheOptions.WINDOWPRESET_KNOB.Height, knobPosX, knobPosY);
+	}
+	protected void saveProjectionWindowPreset()
+	{
+		// Make sure dimension is not zero or negative
+		int width = (TheProjection.getWidth() > TheOptions.PROJECTION_MINIMUM.width) ? TheProjection.getWidth() : TheOptions.PROJECTION_MINIMUM.width;
+		int height = (TheProjection.getHeight() > TheOptions.PROJECTION_MINIMUM.height) ? TheProjection.getHeight() : TheOptions.PROJECTION_MINIMUM.height;
+		// Make sure position is not outside of screen
+		Point point = TheProjection.getLocation();
+		int posX = (point.x > 0 && point.x < RESOLUTION_WIDTH) ? point.x : 0;
+		int posY = (point.y > 0 && point.y < RESOLUTION_HEIGHT) ? point.y : 0;
+		TheOptions.set_WINDOWPRESET_PROJECTION_START(width, height, posX, posY);
+	}
+	protected void saveFrameWindowPreset()
+	{
+		// Make sure dimension is not zero or negative
+		int width = (TheFrame.getWidth() > TheOptions.FRAME_MINIMUM.width) ? TheFrame.getWidth() : TheOptions.FRAME_MINIMUM.width;
+		int height = (TheFrame.getHeight() > TheOptions.FRAME_MINIMUM.height) ? TheFrame.getHeight() : TheOptions.FRAME_MINIMUM.height;
+		// Make sure position is not outside of screen
+		Point point = TheFrame.getLocation();
+		int posX = (point.x > 0 && point.x < RESOLUTION_WIDTH) ? point.x : 0;
+		int posY = (point.y > 0 && point.y < RESOLUTION_HEIGHT) ? point.y : 0;
+		TheOptions.set_WINDOWPRESET_START(width, height, posX, posY);
+	}
+	
+	/**
 	 * Adjusts the frame's size and position from a preset.
 	 * @param pPreset to read.
 	 */
 	protected void loadWindowPreset(WindowPreset pPreset)
 	{
-		WindowPreset.loadWindowPreset(TheFrame, pPreset);
+		if (isProjection)
+		{
+			WindowPreset.loadWindowPreset(TheProjection, pPreset);
+			TheOptions.set_wantProjectionMaximized(false);
+			saveProjectionWindowPreset();
+		}
+		else
+		{
+			WindowPreset.loadWindowPreset(TheFrame, pPreset);
+		}
 	}
 	
 	/**
@@ -588,8 +638,17 @@ public final class Navi extends JPanel {
 	 */
 	protected void saveWindowPreset(int pNumber)
 	{
-		WindowPreset preset = new WindowPreset(TheFrame);
-		TheOptions.set_WINDOWPRESET_USER(preset, pNumber);
+		if (isProjection)
+		{
+			WindowPreset preset = new WindowPreset(TheProjection);
+			TheOptions.set_WINDOWPRESET_PROJECTION_USER(preset, pNumber);
+			TheOptions.set_wantProjectionMaximized(false);
+		}
+		else
+		{
+			WindowPreset preset = new WindowPreset(TheFrame);
+			TheOptions.set_WINDOWPRESET_USER(preset, pNumber);
+		}
 	}
 	
 	/**
@@ -954,7 +1013,7 @@ public final class Navi extends JPanel {
 			toggleGPS(false);
 			toggleVisibleCursor(false);
 			// Save all options
-			saveOptions();
+			saveOptions(true);
 			// Close the browser and frame
 			CefApp.getInstance().dispose();
 			if (isProjection)
@@ -971,34 +1030,19 @@ public final class Navi extends JPanel {
 	/**
 	 * Saves all options that could have been changed while using the program
 	 * into the options text file.
+	 * @param pIsExit if called when program is about to exit.
 	 */
-	protected void saveOptions()
+	protected void saveOptions(boolean pIsExit)
 	{
-		int width;
-		int height;
-		int posX;
-		int posY;
-		Point point;
-		
 		if (isProjection)
 		{
-			// Make sure knob is not outside of screen
-			Point knobPoint = TheKnob.getLocation();
-			int knobPosX = (knobPoint.x > 0 && knobPoint.x < RESOLUTION_WIDTH) ? knobPoint.x : 0;
-			int knobPosY = (knobPoint.y > 0 && knobPoint.y < RESOLUTION_HEIGHT) ? knobPoint.y : 0;
-			TheOptions.set_WINDOWPRESET_KNOB(TheOptions.WINDOWPRESET_KNOB.Width, TheOptions.WINDOWPRESET_KNOB.Height, knobPosX, knobPosY);
+			// Save knob's location
+			saveKnobWindowPreset();
 			
 			// Save projection's dimensions if windowed
 			if (TheOptions.wantProjectionMaximized == false)
 			{
-				// Make sure dimension is not zero or negative
-				width = (TheProjection.getWidth() > TheOptions.PROJECTION_MINIMUM.width) ? TheProjection.getWidth() : TheOptions.PROJECTION_MINIMUM.width;
-				height = (TheProjection.getHeight() > TheOptions.PROJECTION_MINIMUM.height) ? TheProjection.getHeight() : TheOptions.PROJECTION_MINIMUM.height;
-				// Make sure position is not outside of screen
-				point = TheProjection.getLocation();
-				posX = (point.x > 0 && point.x < RESOLUTION_WIDTH) ? point.x : 0;
-				posY = (point.y > 0 && point.y < RESOLUTION_HEIGHT) ? point.y : 0;
-				TheOptions.set_WINDOWPRESET_PROJECTION(width, height, posX, posY);
+				saveProjectionWindowPreset();
 			}
 			
 			// Save zoom level
@@ -1009,25 +1053,22 @@ public final class Navi extends JPanel {
 			// Current frame size and position
 			if (isMiniaturized == false)
 			{
-				// Make sure dimension is not zero or negative
-				width = (TheFrame.getWidth() > TheOptions.FRAME_MINIMUM.width) ? TheFrame.getWidth() : TheOptions.FRAME_MINIMUM.width;
-				height = (TheFrame.getHeight() > TheOptions.FRAME_MINIMUM.height) ? TheFrame.getHeight() : TheOptions.FRAME_MINIMUM.height;
-				// Make sure position is not outside of screen
-				point = TheFrame.getLocation();
-				posX = (point.x > 0 && point.x < RESOLUTION_WIDTH) ? point.x : 0;
-				posY = (point.y > 0 && point.y < RESOLUTION_HEIGHT) ? point.y : 0;
-				TheOptions.set_WINDOWPRESET_START(width, height, posX, posY);
+				saveFrameWindowPreset();
 			}
-
+			
 			// Save zoom level
 			TheOptions.set_ZOOM_LEVEL((float) TheBrowser.getZoomLevel());
-
+			
 			// Save last visited URL
 			TheOptions.set_URL_LASTVISITED(TheBrowserWrapper.sanitizeAddress(TheBrowser.getURL()));
 		}
 		
-		// Reset multiple window check
-		TheOptions.set_wantSingleInstance(true);
+		// Other options to save if exiting the program
+		if (pIsExit)
+		{
+			// Reset multiple window check
+			TheOptions.set_wantSingleInstance(true);
+		}
 		
 		// Save
 		saveOptionsFile();

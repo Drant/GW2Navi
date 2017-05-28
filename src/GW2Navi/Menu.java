@@ -85,13 +85,13 @@ public class Menu {
 		}
 		else
 		{
-			createBarMenu();
-			createBarPopup();
+			createFrameBarMenu();
+			createFrameBarPopup();
 			oNavi.TheBar.add(TheMenu);
 		}
 		if (SystemTray.isSupported())
 		{
-			createTray();
+			createTrayAndProjectionMenu();
 		}
 	}
 	
@@ -213,7 +213,7 @@ public class Menu {
 		// Menu items for "Focused Opacity" menu
 		//------------------------------------------------------------------
 		menu_OpacityFocused.add(item_OpaqueOnFocus);
-		createOpacityList(OpacityType.WindowFocused, menu_OpacityFocused);
+		createOpacityList(menu_OpacityFocused, OpacityType.WindowFocused);
 		
 		// Menu items for "Cursor" menu
 		//------------------------------------------------------------------
@@ -276,7 +276,7 @@ public class Menu {
 	/**
 	 * Creates the menu bar, bar buttons, and its submenus.
 	 */
-	private void createBarMenu()
+	private void createFrameBarMenu()
 	{
 		// Menu creation
 		//==================================================================
@@ -462,7 +462,7 @@ public class Menu {
 		menu_Bookmarks.setMnemonic(KeyEvent.VK_B);
 		menu_Options.setMnemonic(KeyEvent.VK_S);
 		item_Navigation.setMnemonic(KeyEvent.VK_V);
-		item_NewWindow.setMnemonic(KeyEvent.VK_W);
+		item_NewWindow.setMnemonic(KeyEvent.VK_N);
 		item_Reload.setMnemonic(KeyEvent.VK_R);
 		item_Log.setMnemonic(KeyEvent.VK_L);
 		item_Home.setMnemonic(KeyEvent.VK_H);
@@ -785,7 +785,7 @@ public class Menu {
 	/**
 	 * Creates the menu bar's context menu that pops up after right clicking.
 	 */
-	private void createBarPopup()
+	private void createFrameBarPopup()
 	{
 		oNavi.TheBarPopup = new JPopupMenu();
 		JMenuItem tempitem;
@@ -813,35 +813,7 @@ public class Menu {
 		
 		// Menu items for "Sizes" menu
 		//------------------------------------------------------------------
-		for (int i = 0; i < oNavi.TheOptions.WINDOWPRESET_USER.length; i++)
-		{
-			tempitem = new JMenuItem(oNavi.TheTranslations.get("Load") + " #" + (i+1));
-			tempitem.setIcon(Navi.getIcon("open"));
-			tempitem.setMnemonic('0' + (i+1));
-			menu_Sizes.add(tempitem);
-			tempitem.addActionListener((ActionEvent e) ->
-			{
-				int index = getMenuItemIndex(menu_Sizes, e);
-				oNavi.loadWindowPreset(oNavi.TheOptions.WINDOWPRESET_USER[index]);
-				oNavi.TheBrowserWrapper.verifiedExecute(oNavi.TheOptions.JS_SIZE_USER[index]);
-			});
-		}
-		
-		menu_Sizes.addSeparator();
-		
-		for (int i = 0; i < oNavi.TheOptions.WINDOWPRESET_USER.length; i++)
-		{
-			tempitem = new JMenuItem(oNavi.TheTranslations.get("Save") + " #" + (i+1));
-			tempitem.setIcon(Navi.getIcon("save"));
-			menu_Sizes.add(tempitem);
-			tempitem.addActionListener((ActionEvent e) ->
-			{
-				// index needs to subtract the upper "Load" items and the separator item
-				int index = getMenuItemIndex(menu_Sizes, e) - oNavi.TheOptions.WINDOWPRESET_USER.length - 1;
-				oNavi.saveWindowPreset(index);
-			});
-		}
-		
+		createSizeList(menu_Sizes, oNavi.TheOptions.WINDOWPRESET_USER, oNavi.TheOptions.JS_USER);
 		
 		// Menu items for "Colors" menu
 		//------------------------------------------------------------------
@@ -948,13 +920,14 @@ public class Menu {
 			});
 		}
 		// Unfocused Opacity list
-		createOpacityList(OpacityType.WindowUnfocused, oNavi.TheBarPopup);
+		createOpacityList(oNavi.TheBarPopup, OpacityType.WindowUnfocused);
 	}
 	
 	/**
-	 * Creates the taskbar tray icon and its context menu.
+	 * Creates the taskbar tray icon and reuses menu items for the projection
+	 * knob menu.
 	 */
-	private void createTray()
+	private void createTrayAndProjectionMenu()
 	{
 		// Tray icon menu, reuses menu items previously created
 		//------------------------------------------------------------------
@@ -969,7 +942,7 @@ public class Menu {
 		JMenu tmenu_Opacity = new JMenu(oNavi.TheTranslations.get("Opacity"));
 		JMenu tmenu_OpacityFocused = new JMenu(oNavi.TheTranslations.get("Opacity", "Focused"));
 		JMenu tmenu_Window = new JMenu(oNavi.TheTranslations.get("Window"));
-		JMenu tmenu_Navigation = new JMenu(oNavi.TheTranslations.get("Navigation"));
+		JMenu tmenu_Sizes = new JMenu(oNavi.TheTranslations.get("Sizes"));
 		JMenuItem titem_NewWindow = new JMenuItem(oNavi.TheTranslations.get("New", "Window"));
 		JMenuItem titem_Reload = new JMenuItem(oNavi.TheTranslations.get("Reload"));
 		JMenuItem titem_Log = new JMenuItem(oNavi.TheTranslations.get("Log"));
@@ -995,7 +968,7 @@ public class Menu {
 		tmenu_OpacityFocused.setIcon(Navi.getIcon("opacity"));
 		titem_NewWindow.setIcon(Navi.getIcon("newwindow"));
 		tmenu_Window.setIcon(Navi.getIcon("window"));
-		tmenu_Navigation.setIcon(Navi.getIcon("navigation"));
+		tmenu_Sizes.setIcon(Navi.getIcon("presets"));
 		titem_Reload.setIcon(Navi.getIcon("br_reload"));
 		titem_Log.setIcon(Navi.getIcon("log"));
 		titem_Home.setIcon(Navi.getIcon("home"));
@@ -1017,16 +990,16 @@ public class Menu {
 		
 		tmenu_Opacity.setMnemonic(KeyEvent.VK_A);
 		tmenu_OpacityFocused.setMnemonic(KeyEvent.VK_F);
-		tmenu_Window.setMnemonic(KeyEvent.VK_I);
-		tmenu_Navigation.setMnemonic(KeyEvent.VK_N);
-		titem_NewWindow.setMnemonic(KeyEvent.VK_W);
+		tmenu_Window.setMnemonic(KeyEvent.VK_W);
+		tmenu_Sizes.setMnemonic(KeyEvent.VK_S);
+		titem_NewWindow.setMnemonic(KeyEvent.VK_N);
 		titem_Reload.setMnemonic(KeyEvent.VK_R);
 		titem_Log.setMnemonic(KeyEvent.VK_L);
 		titem_Home.setMnemonic(KeyEvent.VK_H);
 		titem_Update.setMnemonic(KeyEvent.VK_U);
 		titem_About.setMnemonic(KeyEvent.VK_B);
 		titem_ShowWindow.setMnemonic(KeyEvent.VK_W);
-		titem_Windowed.setMnemonic(KeyEvent.VK_D);
+		titem_Windowed.setMnemonic(KeyEvent.VK_W);
 		titem_Maximize.setMnemonic(KeyEvent.VK_E);
 		titem_AlwaysOnTop.setMnemonic(KeyEvent.VK_Y);
 		titem_OpaqueOnFocus.setMnemonic(KeyEvent.VK_F);
@@ -1045,7 +1018,7 @@ public class Menu {
 			tmenu_Options.add(tmenu_OpacityFocused);
 			tmenu_OpacityFocused.add(titem_OpaqueOnFocus);
 			titem_OpaqueOnFocus.setSelected(oNavi.TheOptions.wantProjectionOpacityOnFocus);
-			createOpacityList(OpacityType.ProjectionFocused, tmenu_OpacityFocused);
+			createOpacityList(tmenu_OpacityFocused, OpacityType.ProjectionFocused);
 			tmenu_Options.addSeparator();
 			// Options submenu exclusively for projection
 			tmenu_Options.setMnemonic(KeyEvent.VK_S);
@@ -1060,6 +1033,7 @@ public class Menu {
 			oNavi.TheKnobPopup = new JPopupMenu();
 			oNavi.TheKnobPopup.add(tmenu_Opacity);
 			oNavi.TheKnobPopup.add(tmenu_Window);
+			oNavi.TheKnobPopup.add(tmenu_Sizes);
 			oNavi.TheKnobPopup.add(menu_Cursor);
 			oNavi.TheKnobPopup.addSeparator();
 			oNavi.TheKnobPopup.add(titem_NewWindow);
@@ -1073,7 +1047,8 @@ public class Menu {
 			oNavi.TheKnobPopup.add(tmenu_Options);
 			oNavi.TheKnobPopup.addSeparator();
 			oNavi.TheKnobPopup.add(titem_Exit);
-			createOpacityList(OpacityType.ProjectionUnfocused, tmenu_Opacity);
+			createOpacityList(tmenu_Opacity, OpacityType.ProjectionUnfocused);
+			createSizeList(tmenu_Sizes, oNavi.TheOptions.WINDOWPRESET_PROJECTION_USER, oNavi.TheOptions.JS_PROJECTION_USER);
 			
 			// Knob submenu
 			tmenu_Window.add(titem_Windowed);
@@ -1112,7 +1087,7 @@ public class Menu {
 		}
 		else
 		{
-			// For window, put essential window manipulation actions here
+			// For framed overlay, put essential window manipulation actions here
 			TrayPopup.add(titem_ShowWindow);
 			TrayPopup.add(titem_Maximize);
 			TrayPopup.add(titem_AlwaysOnTop);
@@ -1280,11 +1255,11 @@ public class Menu {
 	}
 	
 	/**
-	 * Creates menu items representing each selectable opacity level.
-	 * @param pIsFocused for the possible lists.
+	 * Macro function to create menu items representing each selectable opacity level.
 	 * @param pList menu to insert into.
+	 * @param pIsFocused for the possible lists.
 	 */
-	private void createOpacityList(OpacityType pType, JComponent pList)
+	private void createOpacityList(JComponent pList, OpacityType pType)
 	{
 		JRadioButtonMenuItem tempradioitem;
 		ButtonGroup group_Opacity = new ButtonGroup();
@@ -1362,6 +1337,45 @@ public class Menu {
 			} break;
 		}
 		item_OpacityArraylist.get(oNavi.OPACITY_LEVELS_10 - (int)(opacityselected * oNavi.OPACITY_LEVELS_10)).setSelected(true);
+	}
+	
+	/**
+	 * Macro function to populate a list menu with load/save WindowPreset items.
+	 * @param pMenu to populate.
+	 * @param pWindowPreset to load or save when clicked on a menu item.
+	 * @param pScript to execute upon loading a WindowPreset.
+	 */
+	private void createSizeList(JMenu pMenu, WindowPreset[] pWindowPreset, String[] pScript)
+	{
+		JMenuItem tempitem;
+		for (int i = 0; i < pWindowPreset.length; i++)
+		{
+			tempitem = new JMenuItem(oNavi.TheTranslations.get("Load") + " #" + (i+1));
+			tempitem.setIcon(Navi.getIcon("open"));
+			tempitem.setMnemonic('0' + (i+1));
+			pMenu.add(tempitem);
+			tempitem.addActionListener((ActionEvent e) ->
+			{
+				int index = getMenuItemIndex(pMenu, e);
+				oNavi.loadWindowPreset(pWindowPreset[index]);
+				oNavi.TheBrowserWrapper.verifiedExecute(pScript[index]);
+			});
+		}
+		
+		pMenu.addSeparator();
+		
+		for (int i = 0; i < pWindowPreset.length; i++)
+		{
+			tempitem = new JMenuItem(oNavi.TheTranslations.get("Save") + " #" + (i+1));
+			tempitem.setIcon(Navi.getIcon("save"));
+			pMenu.add(tempitem);
+			tempitem.addActionListener((ActionEvent e) ->
+			{
+				// index needs to subtract the upper "Load" items and the separator item
+				int index = getMenuItemIndex(pMenu, e) - pWindowPreset.length - 1;
+				oNavi.saveWindowPreset(index);
+			});
+		}
 	}
 	
 	/**

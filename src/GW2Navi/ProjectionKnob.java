@@ -11,7 +11,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import javax.swing.ImageIcon;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JWindow;
 
@@ -153,6 +152,20 @@ public class ProjectionKnob extends JWindow implements MouseMotionListener, Mous
 		knobClickY = pEvent.getY();
 		projectionWidth = oNavi.TheProjection.getWidth();
 		projectionHeight = oNavi.TheProjection.getHeight();
+		
+		// Set cursor to signify functionality
+		if (pEvent.isShiftDown())
+		{
+			this.setCursor(new FrameCursor().MOVE);
+		}
+		else if (pEvent.isControlDown())
+		{
+			this.setCursor(new FrameCursor().RESIZE);
+		}
+		else
+		{
+			this.setCursor(new FrameCursor().NORMAL);
+		}
 	}
 	@Override
 	public void mouseDragged(MouseEvent pEvent)
@@ -257,6 +270,7 @@ public class ProjectionKnob extends JWindow implements MouseMotionListener, Mous
 		{
 			oNavi.TheKnobPopup.show(pEvent.getComponent(), pEvent.getX(), pEvent.getY());
 		}
+		this.setCursor(new FrameCursor().NORMAL);
 	}
 	@Override
 	public void mouseEntered(MouseEvent pEvent)

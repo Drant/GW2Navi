@@ -37,7 +37,8 @@ public class Option {
 	String JS_QUICK_A;
 	String JS_QUICK_B;
 	String JS_QUICK_TOGGLE;
-	String[] JS_SIZE_USER = new String[8];
+	String[] JS_USER = new String[8];
+	String[] JS_PROJECTION_USER = new String[8];
 	
 	String JS_GPS_POSITION;
 	String JS_GPS_DIRECTION;
@@ -84,7 +85,8 @@ public class Option {
 	
 	WindowPreset WINDOWPRESET_START;
 	WindowPreset[] WINDOWPRESET_USER = new WindowPreset[8];
-	WindowPreset WINDOWPRESET_PROJECTION;
+	WindowPreset WINDOWPRESET_PROJECTION_START;
+	WindowPreset[] WINDOWPRESET_PROJECTION_USER = new WindowPreset[8];
 	WindowPreset WINDOWPRESET_KNOB;
 	WindowPreset WINDOWPRESET_KNOB_BIG;
 	ColorPreset COLORPRESET_START;
@@ -125,14 +127,22 @@ public class Option {
 		JS_QUICK_A = javascript.get("JS_QUICK_A");
 		JS_QUICK_B = javascript.get("JS_QUICK_B");
 		JS_QUICK_TOGGLE = javascript.get("JS_QUICK_TOGGLE");
-		JS_SIZE_USER[0] = javascript.get("JS_SIZE_USER0");
-		JS_SIZE_USER[1] = javascript.get("JS_SIZE_USER1");
-		JS_SIZE_USER[2] = javascript.get("JS_SIZE_USER2");
-		JS_SIZE_USER[3] = javascript.get("JS_SIZE_USER3");
-		JS_SIZE_USER[4] = javascript.get("JS_SIZE_USER4");
-		JS_SIZE_USER[5] = javascript.get("JS_SIZE_USER5");
-		JS_SIZE_USER[6] = javascript.get("JS_SIZE_USER6");
-		JS_SIZE_USER[7] = javascript.get("JS_SIZE_USER7");
+		JS_USER[0] = javascript.get("JS_USER0");
+		JS_USER[1] = javascript.get("JS_USER1");
+		JS_USER[2] = javascript.get("JS_USER2");
+		JS_USER[3] = javascript.get("JS_USER3");
+		JS_USER[4] = javascript.get("JS_USER4");
+		JS_USER[5] = javascript.get("JS_USER5");
+		JS_USER[6] = javascript.get("JS_USER6");
+		JS_USER[7] = javascript.get("JS_USER7");
+		JS_PROJECTION_USER[0] = javascript.get("JS_PROJECTION_USER0");
+		JS_PROJECTION_USER[1] = javascript.get("JS_PROJECTION_USER1");
+		JS_PROJECTION_USER[2] = javascript.get("JS_PROJECTION_USER2");
+		JS_PROJECTION_USER[3] = javascript.get("JS_PROJECTION_USER3");
+		JS_PROJECTION_USER[4] = javascript.get("JS_PROJECTION_USER4");
+		JS_PROJECTION_USER[5] = javascript.get("JS_PROJECTION_USER5");
+		JS_PROJECTION_USER[6] = javascript.get("JS_PROJECTION_USER6");
+		JS_PROJECTION_USER[7] = javascript.get("JS_PROJECTION_USER7");
 		
 		JS_GPS_POSITION = javascript.get("JS_GPS_POSITION");
 		JS_GPS_DIRECTION = javascript.get("JS_GPS_DIRECTION");
@@ -186,7 +196,15 @@ public class Option {
 		WINDOWPRESET_USER[5] = new WindowPreset(windowpresets.get("WINDOWPRESET_USER5"));
 		WINDOWPRESET_USER[6] = new WindowPreset(windowpresets.get("WINDOWPRESET_USER6"));
 		WINDOWPRESET_USER[7] = new WindowPreset(windowpresets.get("WINDOWPRESET_USER7"));
-		WINDOWPRESET_PROJECTION = new WindowPreset(windowpresets.get("WINDOWPRESET_PROJECTION"));
+		WINDOWPRESET_PROJECTION_START = new WindowPreset(windowpresets.get("WINDOWPRESET_PROJECTION_START"));
+		WINDOWPRESET_PROJECTION_USER[0] = new WindowPreset(windowpresets.get("WINDOWPRESET_PROJECTION_USER0"));
+		WINDOWPRESET_PROJECTION_USER[1] = new WindowPreset(windowpresets.get("WINDOWPRESET_PROJECTION_USER1"));
+		WINDOWPRESET_PROJECTION_USER[2] = new WindowPreset(windowpresets.get("WINDOWPRESET_PROJECTION_USER2"));
+		WINDOWPRESET_PROJECTION_USER[3] = new WindowPreset(windowpresets.get("WINDOWPRESET_PROJECTION_USER3"));
+		WINDOWPRESET_PROJECTION_USER[4] = new WindowPreset(windowpresets.get("WINDOWPRESET_PROJECTION_USER4"));
+		WINDOWPRESET_PROJECTION_USER[5] = new WindowPreset(windowpresets.get("WINDOWPRESET_PROJECTION_USER5"));
+		WINDOWPRESET_PROJECTION_USER[6] = new WindowPreset(windowpresets.get("WINDOWPRESET_PROJECTION_USER6"));
+		WINDOWPRESET_PROJECTION_USER[7] = new WindowPreset(windowpresets.get("WINDOWPRESET_PROJECTION_USER7"));
 		WINDOWPRESET_KNOB = new WindowPreset(windowpresets.get("WINDOWPRESET_KNOB"));
 		WINDOWPRESET_KNOB_BIG = new WindowPreset(windowpresets.get("WINDOWPRESET_KNOB_BIG"));
 		
@@ -346,14 +364,24 @@ public class Option {
 		windowpresets.put("WINDOWPRESET_USER" + Integer.toString(pNumber), pPreset.toString());
 	}
 	
-	public void set_WINDOWPRESET_PROJECTION(int pWidth, int pHeight, int pPosX, int pPosY)
+	public void set_WINDOWPRESET_PROJECTION_START(int pWidth, int pHeight, int pPosX, int pPosY)
 	{
-		windowpresets.put("WINDOWPRESET_PROJECTION", WindowPreset.getString(pWidth, pHeight, pPosX, pPosY));
+		String preset = WindowPreset.getString(pWidth, pHeight, pPosX, pPosY);
+		WINDOWPRESET_PROJECTION_START = new WindowPreset(preset);
+		windowpresets.put("WINDOWPRESET_PROJECTION_START", preset);
+	}
+	
+	public void set_WINDOWPRESET_PROJECTION_USER(WindowPreset pPreset, int pNumber)
+	{
+		WINDOWPRESET_PROJECTION_USER[pNumber] = pPreset;
+		windowpresets.put("WINDOWPRESET_PROJECTION_USER" + Integer.toString(pNumber), pPreset.toString());
 	}
 	
 	public void set_WINDOWPRESET_KNOB(int pWidth, int pHeight, int pPosX, int pPosY)
 	{
-		windowpresets.put("WINDOWPRESET_KNOB", WindowPreset.getString(pWidth, pHeight, pPosX, pPosY));
+		String preset = WindowPreset.getString(pWidth, pHeight, pPosX, pPosY);
+		WINDOWPRESET_KNOB = new WindowPreset(preset);
+		windowpresets.put("WINDOWPRESET_KNOB", preset);
 	}
 	
 	public void set_COLORPRESET_START()

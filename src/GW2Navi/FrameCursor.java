@@ -14,6 +14,8 @@ public class FrameCursor {
 	
 	Cursor NORMAL;
 	Cursor POINTER;
+	Cursor MOVE;
+	Cursor RESIZE;
 	Cursor RESIZE_N;
 	Cursor RESIZE_NE;
 	Cursor RESIZE_E;
@@ -36,6 +38,12 @@ public class FrameCursor {
 			pointStandard, null);
 		POINTER = toolkit.createCustomCursor(
 			new ImageIcon(this.getClass().getResource("/cursor/pointer.png")).getImage(),
+			pointStandard, null);
+		MOVE = toolkit.createCustomCursor(
+			new ImageIcon(this.getClass().getResource("/cursor/move.png")).getImage(),
+			pointStandard, null);
+		RESIZE = toolkit.createCustomCursor(
+			new ImageIcon(this.getClass().getResource("/cursor/resize.png")).getImage(),
 			pointStandard, null);
 		
 		RESIZE_N = toolkit.createCustomCursor(
