@@ -29,6 +29,8 @@ public class Option {
 	String URL_SEARCH;
 	String URL_SITE;
 	String URL_LOCAL;
+	String URL_NEW_WINDOW;
+	String URL_PROJECTION_NEW_WINDOW;
 	
 	String JS_QUICK_1;
 	String JS_QUICK_2;
@@ -119,6 +121,8 @@ public class Option {
 		URL_SEARCH = urls.get("URL_SEARCH");
 		URL_SITE = urls.get("URL_SITE");
 		URL_LOCAL = urls.get("URL_LOCAL");
+		URL_NEW_WINDOW = urls.get("URL_NEW_WINDOW");
+		URL_PROJECTION_NEW_WINDOW = urls.get("URL_PROJECTION_NEW_WINDOW");
 		
 		JS_QUICK_1 = javascript.get("JS_QUICK_1");
 		JS_QUICK_2 = javascript.get("JS_QUICK_2");

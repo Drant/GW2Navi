@@ -241,27 +241,43 @@ public class ProjectionKnob extends JWindow implements MouseMotionListener, Mous
 	@Override
 	public void mouseClicked(MouseEvent pEvent)
 	{
-		if (pEvent.getButton() == MouseEvent.BUTTON1)
+		if (pEvent.isAltDown())
 		{
-			switch (state)
+			// Alt + RightClick minimize
+			if (pEvent.getButton() == MouseEvent.BUTTON3)
 			{
-				case 0: // Shown
-					updateKnobAppearance(1);
-					oNavi.TheProjection.setVisible(true);
-					oNavi.setClickable(false);
-					break;
-				case 1: // Shown but clickthrough
-					updateKnobAppearance(2);
-					oNavi.toggleFrame(false);
-					break;
-				default: // Hidden
-					updateKnobAppearance(0);
-					oNavi.setClickable(true);
-					oNavi.toggleFrame(true);
-					break;
+				oNavi.minimizeWindow();
+			}
+			// Alt + LeftClick toggle maximize/restore
+			else
+			{
+				oNavi.maximizeWindow(!oNavi.TheOptions.wantProjectionMaximized);
 			}
 		}
-		this.setAlwaysOnTop(true);
+		else
+		{
+			if (pEvent.getButton() == MouseEvent.BUTTON1)
+			{
+				switch (state)
+				{
+					case 0: // Shown
+						updateKnobAppearance(1);
+						oNavi.TheProjection.setVisible(true);
+						oNavi.setWindowClickable(false);
+						break;
+					case 1: // Shown but clickthrough
+						updateKnobAppearance(2);
+						oNavi.toggleWindow(false);
+						break;
+					default: // Hidden
+						updateKnobAppearance(0);
+						oNavi.setWindowClickable(true);
+						oNavi.toggleWindow(true);
+						break;
+				}
+			}
+			this.setAlwaysOnTop(true);
+		}
 	}
 	@Override
 	public void mouseReleased(MouseEvent pEvent)

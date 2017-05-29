@@ -56,13 +56,12 @@ public final class Navi extends JPanel {
 	
 	// Meta
 	boolean isDebug = false;
-	final static String PROGRAM_VERSION = "2017.05.28";
+	final static String PROGRAM_VERSION = "2017.05.29";
 	final static String PROGRAM_NAME = "GW2Navi";
 	final static String PROGRAM_NAME_PROJECTION = "GW2Navi 3D";
 	final static String PROGRAM_NAME_CURSOR = "GW2Navi Cursor";
 	static String DIRECTORY_ICONS = "img/"; // Image folder inside package
 	static String DIRECTORY_ICONS_CUSTOM = "bin/cursors/";
-	static String FILENAME_EXECUTABLE = "GW2Navi_Start_2D.bat"; // For new window action
 	static String FILENAME_OPTIONS = "options.ini";
 	static String FILENAME_OPTIONS_DEBUG = "options-debug.ini";
 	static String FILENAME_TRANSLATIONS = "translations.ini";
@@ -100,11 +99,11 @@ public final class Navi extends JPanel {
 	protected Bookmark TheBookmarks;
 
 	// Components
-	protected ResizableFrame TheFrame; // Framed window with resizable edges
-	protected JFrame TheProjection; // Fullscreen see-through frame for 3D imagery
+	protected ResizableFrame TheFrame; // Framed window with bar and resizable borders for 2D
+	protected JFrame TheProjection; // Fullscreen see-through projection window for 3D
 	protected ProjectionKnob TheKnob; // Draggable menu button for projection
-	protected JPanel TheContainer; // Container for windowed frame
-	protected JPanel TheBar; // The draggable top bar of the windowed frame that contains the menu
+	protected JPanel TheContainer; // Container for framed window
+	protected JPanel TheBar; // The draggable top bar of the framed window that contains the menu
 	protected JPopupMenu TheBarPopup; // The context menu that pops up from the bar after right clicking
 	protected JPopupMenu TheKnobPopup; // The context menu that pops up from the knob after right clicking
 	protected SystemTray TheTray; // Taskbar tray object
@@ -151,8 +150,10 @@ public final class Navi extends JPanel {
 		+ "<br />"
 		+ "Right click the knob for the <b>overlay menu</b>.<br />"
 		+ "Drag the knob to move it to an accessible and unintrusive place on screen.<br />"
-		+ "Hold Shift + Drag the knob to move the projection.<br />"
-		+ "Hold Ctrl + Drag the knob to resize the projection.<br />"
+		+ "Hold Shift + Drag the knob to <b>move</b> the projection.<br />"
+		+ "Hold Ctrl + Drag the knob to <b>resize</b> the projection.<br />"
+		+ "Hold Alt + LeftClick the knob to toggle <b>maximized/windowed</b>.<br />"
+		+ "Hold Alt + RightClick the knob to <b>minimize</b>.<br />"
 		+ "<br />"
 		+ "<h2>Projection Usage:</h2>"
 		+ "The projection is the website layer over the game layer.<br />"
@@ -357,7 +358,7 @@ public final class Navi extends JPanel {
 	}
 	
 	/**
-	 * Initializes a borderless see-through browser frame.
+	 * Initializes a borderless see-through browser window.
 	 */
 	protected void createProjection()
 	{
@@ -366,6 +367,7 @@ public final class Navi extends JPanel {
 		TheProjection.setTitle(PROGRAM_NAME_PROJECTION);
 		TheProjection.setIconImage(getIcon("task_projection").getImage());
 		TheProjection.add(this, BorderLayout.CENTER);
+		
 		// Appearance
 		TheProjection.setAlwaysOnTop(true);
 		TheProjection.setResizable(false);
@@ -373,20 +375,66 @@ public final class Navi extends JPanel {
 		TheProjection.setBackground(new Color(0, 0, 0, 0)); 
 		TheProjection.setOpacity(TheOptions.PROJECTION_OPACITY_FOCUSED);
 		TheProjection.setVisible(true);
-		toggleProjectionMaximize(TheOptions.wantProjectionMaximized);
-		// Behavior
-		TheProjection.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		TheProjection.addWindowListener(new WindowAdapter()
-		{
-			@Override
-			public void windowClosing(WindowEvent e)
-			{
-				doExit();
-			}
-		});
+		maximizeWindow(TheOptions.wantProjectionMaximized);
+		
 		// Controller for projection
 		createKnob();
-		bindProjectionFocus();
+		
+		// Bind projection behavior
+		bindWindowFocus();
+		bindWindowClose();
+	}
+
+	/**
+	 * Initializes a bordered semi-transparent browser window.
+	 */
+	protected void createFrame()
+	{
+		// Combine some measurements
+		sumFrameDimensions();
+		
+		// Create frame (the window)
+		Point initialLocation = new Point(
+			TheOptions.WINDOWPRESET_START.PosX,
+			TheOptions.WINDOWPRESET_START.PosY);
+		Dimension initialDimension = new Dimension(
+			TheOptions.WINDOWPRESET_START.Width,
+			TheOptions.WINDOWPRESET_START.Height);
+		Dimension minimumDimension = new Dimension(
+			TheOptions.FRAME_MINIMUM.width + ADD_HORIZONTAL_PIXELS,
+			TheOptions.FRAME_MINIMUM.height + ADD_VERTICAL_PIXELS);
+		TheFrame = new ResizableFrame(initialDimension, minimumDimension, initialLocation);
+
+		// Additional frame settings
+		TheFrame.setTitle(PROGRAM_NAME);
+		TheFrame.getContentPane().add(this, BorderLayout.CENTER);
+		TheFrame.setAlwaysOnTop(TheOptions.wantAlwaysOnTop);
+		TheFrame.setOpacity(TheOptions.OPACITY_UNFOCUSED);
+		TheFrame.setVisible(true);
+
+		// Container inside the frame
+		TheContainer = (JPanel) TheFrame.getContentPane();
+		TheContainer.setBackground(new Color(0, 0, 0, 0));
+
+		// Top bar of the frame, acts as a menu and a place to drag-move the frame
+		TheBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 2));
+		TheBar.setPreferredSize(new Dimension(
+			TheOptions.WINDOWPRESET_START.Width,
+			TheOptions.MENUBAR_HEIGHT));
+		TheBar.setBackground(TheOptions.COLORPRESET_START.BarUnfocused);
+		TheBar.addMouseListener(TheFrame);
+		TheBar.addMouseMotionListener(TheFrame);
+		TheContainer.add(TheBar, BorderLayout.NORTH);
+
+		// Set program taskbar icon
+		TheFrame.setIconImage(getIcon("task_program").getImage());
+		
+		// Show navbar if chosen before
+		toggleFrameNavbar(TheOptions.wantNavbar, true);
+		
+		// Bind frame behavior
+		bindWindowFocus();
+		bindWindowClose();
 	}
 	
 	/**
@@ -412,7 +460,7 @@ public final class Navi extends JPanel {
 	/**
 	 * Reassigns reuseable dimension sizes and summands.
 	 */
-	protected void sumDimensions()
+	protected void sumFrameDimensions()
 	{
 		BORDER_THICKNESS_TOTAL = TheOptions.BORDER_THICKNESS * 2;
 		ADD_HORIZONTAL_PIXELS = BORDER_THICKNESS_TOTAL;
@@ -423,13 +471,25 @@ public final class Navi extends JPanel {
 	 * Resizes the frame based on current selected border thickness.
 	 * @param pNewThickness thickness size in pixels.
 	 */
-	protected void resizeByThickness(int pNewThickness)
+	protected void resizeFrameByThickness(int pNewThickness)
 	{
 		int adjust = pNewThickness - TheOptions.BORDER_THICKNESS;
 		TheFrame.setSize(new Dimension(
 			TheFrame.getWidth() + (adjust * 2),
 			TheFrame.getHeight() + (adjust * 2))
 		);
+	}
+	
+	/**
+	 * Moves the frame x and y additional pixels.
+	 * @param posX to the right, negative values to the left.
+	 * @param posY to the bottom, negative values to the top.
+	 */
+	protected void nudgeFrame(int posX, int posY)
+	{
+		TheFrame.setLocation(
+			(int) TheFrame.getLocation().getX() + posX,
+			(int) TheFrame.getLocation().getY() + posY);
 	}
 	
 	/**
@@ -454,9 +514,10 @@ public final class Navi extends JPanel {
 	
 	/**
 	 * Shows or hides the program. If hide then its title will not be on the taskbar.
+	 * "Window" refers to either the Framed Window or the Projection Window.
 	 * @param pWantShow
 	 */
-	protected void toggleFrame(boolean pWantShow)
+	protected void toggleWindow(boolean pWantShow)
 	{
 		if (isProjection)
 		{
@@ -491,62 +552,106 @@ public final class Navi extends JPanel {
 			}
 		}
 	}
-	protected void toggleFrame()
+	protected void toggleWindow()
 	{
 		if (isProjection)
 		{
 			if (TheProjection.getState() != Frame.ICONIFIED)
 			{
-				toggleFrame(false);
+				toggleWindow(false);
 			}
 			else
 			{
-				toggleFrame(true);
+				toggleWindow(true);
 			}
 		}
 		else
 		{
 			if (TheFrame.isVisible())
 			{
-				toggleFrame(false);
+				toggleWindow(false);
 			}
 			else
 			{
-				toggleFrame(true);
+				toggleWindow(true);
 			}
 		}
 	}
 	
 	/**
-	 * Maximizes the frame or restores if already maximized.
-	 */
-	public void toggleFrameMaximize()
-	{
-		TheFrame.headerDoubleClickResize();
-	}
-	
-	/**
-	 * Toggles the projection between maximized and windowed size.
+	 * Maximizes the program or restores if already maximized.
 	 * @param pBoolean true for maximized.
 	 */
-	public void toggleProjectionMaximize(boolean pBoolean)
+	public void maximizeWindow(boolean pBoolean)
 	{
-		if (pBoolean)
+		if (isProjection)
 		{
-			// If switching from windowed to maximized, then save the current windowed dimensions
-			if (TheOptions.wantProjectionMaximized == false)
+			if (pBoolean)
 			{
-				saveProjectionWindowPreset();
+				// If switching from windowed to maximized, then save the current windowed dimensions
+				if (TheOptions.wantProjectionMaximized == false)
+				{
+					saveProjectionWindowPreset();
+				}
+				TheProjection.setLocation(PROJECTION_DEFAULT_LOCATION);
+				TheProjection.setSize(RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
+				TheProjection.setExtendedState(JFrame.MAXIMIZED_BOTH); // Maximized will make it overlap the taskbar, which is desired for fullscreen
 			}
-			TheProjection.setLocation(PROJECTION_DEFAULT_LOCATION);
-			TheProjection.setSize(RESOLUTION_WIDTH, RESOLUTION_HEIGHT);
-			TheProjection.setExtendedState(JFrame.MAXIMIZED_BOTH); // Maximized will make it overlap the taskbar, which is desired for fullscreen
+			else
+			{
+				WindowPreset.loadWindowPreset(TheProjection, TheOptions.WINDOWPRESET_PROJECTION_START);
+			}
+			TheOptions.set_wantProjectionMaximized(pBoolean);
 		}
 		else
 		{
-			WindowPreset.loadWindowPreset(TheProjection, TheOptions.WINDOWPRESET_PROJECTION_START);
+			TheFrame.headerDoubleClickResize();
 		}
-		TheOptions.set_wantProjectionMaximized(pBoolean);
+	}
+	
+	/**
+	 * Minimizes the program to the taskbar (not tray).
+	 */
+	public void minimizeWindow()
+	{
+		if (isProjection)
+		{
+			TheKnob.setVisible(false);
+		}
+		toggleWindow(false);
+	}
+	
+	/**
+	 * Shows or hides the frame menu bar.
+	 * @param pWantVisible 
+	 */
+	protected void toggleFrameBar(boolean pWantVisible)
+	{
+		if (isBarVisible == pWantVisible)
+		{
+			return;
+		}
+		isBarVisible = pWantVisible;
+		
+		TheBar.setVisible(pWantVisible);
+		if (pWantVisible)
+		{
+			// Compensate size for the missing menu bar
+			TheFrame.setSize(new Dimension(
+				TheFrame.getWidth(),
+				TheFrame.getHeight() + TheOptions.MENUBAR_HEIGHT)
+			);
+			// Compensate position
+			nudgeFrame(0, -TheOptions.MENUBAR_HEIGHT);
+		}
+		else
+		{
+			TheFrame.setSize(new Dimension(
+				TheFrame.getWidth(),
+				TheFrame.getHeight() - TheOptions.MENUBAR_HEIGHT)
+			);
+			nudgeFrame(0, TheOptions.MENUBAR_HEIGHT);
+		}
 	}
 	
 	/**
@@ -554,7 +659,7 @@ public final class Navi extends JPanel {
 	 * @param pWantNavbar to show or hide.
 	 * @param pIsInitial whether this function is being run at the start of the program.
 	 */
-	protected void doShowNavbar(boolean pWantNavbar, boolean pIsInitial)
+	protected void toggleFrameNavbar(boolean pWantNavbar, boolean pIsInitial)
 	{
 		TheOptions.set_wantNavbar(pWantNavbar);
 		TheBrowserWrapper.TheNavbar.setVisible(TheOptions.wantNavbar);
@@ -576,6 +681,244 @@ public final class Navi extends JPanel {
 					TheFrame.getHeight() - TheOptions.NAVBAR_HEIGHT)
 				);
 			}
+		}
+	}
+	
+	/**
+	 * Makes the frame clickthrough, such that the overlay is visible but any
+	 * mouse interactions with the window are not possible.
+	 * Source by Joe C from: http://stackoverflow.com/questions/11217660/java-making-a-window-click-through-including-text-images
+	 * @param pWantClickable to turn on/off.
+	 */
+	protected void setWindowClickable(boolean pWantClickable)
+	{
+		// Don't do anything if already in wanted state
+		if (isClickable == pWantClickable)
+		{
+			return;
+		}
+		isClickable = pWantClickable;
+		WinDef.HWND hwnd;
+		// Also hides the menu bar if want clickthrough, and resizes the frame to compensate for the menu bar loss/gain
+		if (isProjection)
+		{
+			hwnd = getHWnd(TheProjection);
+		}
+		else
+		{
+			boolean isMaximized = TheFrame.isMaximized();
+			toggleFrameBar(isClickable);
+			if (isMaximized)
+			{
+				TheFrame.setFullscreen();
+			}
+			hwnd = getHWnd(TheFrame);
+		}
+		
+		// Documentation for the GetWindowLong function is at https://msdn.microsoft.com/en-us/library/windows/desktop/ms633591.aspx
+		int wl = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE);
+		if (pWantClickable)
+		{
+			// Remove the clickthrough flags
+			if (isProjection)
+			{
+				wl = wl & WinUser.WS_EX_LAYERED;
+			}
+			else
+			{
+				wl = wl & WinUser.WS_EX_LAYERED & WinUser.WS_EX_TRANSPARENT;
+			}
+		}
+		else
+		{
+			if (isProjection == false && TheOptions.OPACITY_UNFOCUSED == 1)
+			{
+				// Clickthrough only works if the window is transparent (not 100% opaque)
+				TheOptions.set_OPACITY_UNFOCUSED(TRANSPARENCY_MIN);
+				TheFrame.setOpacity(TheOptions.OPACITY_UNFOCUSED);
+			}
+			// The flags to make the window clickthrough
+			wl = wl | WinUser.WS_EX_LAYERED | WinUser.WS_EX_TRANSPARENT;
+		}
+		// Documentation for the GWL_EXSTYLE value is at https://msdn.microsoft.com/en-us/library/windows/desktop/ff700543.aspx
+		User32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_EXSTYLE, wl);
+	}
+	protected void toggleClickable()
+	{
+		setWindowClickable(!isClickable);
+	}
+	
+	/**
+	 * Get the window handle from the OS.
+	 * @param pComponent
+	 * @return hwnd
+	 */
+	protected static HWND getHWnd(Component pComponent)
+	{
+		HWND hwnd = new HWND();
+		hwnd.setPointer(Native.getComponentPointer(pComponent));
+		return hwnd;
+	}
+
+	/**
+	 * Detects frame's focus state to do the visual changes.
+	 */
+	protected void bindWindowFocus()
+	{
+		if (isProjection)
+		{
+			TheProjection.addWindowFocusListener(new WindowFocusListener()
+			{
+				@Override
+				public void windowGainedFocus(WindowEvent e)
+				{
+					doProjectionFocus(true);
+				}
+				@Override
+				public void windowLostFocus(WindowEvent e)
+				{
+					doProjectionFocus(false);
+				}
+			});
+		}
+		else
+		{
+			TheFrame.addWindowFocusListener(new WindowFocusListener()
+			{
+				@Override
+				public void windowGainedFocus(WindowEvent e)
+				{
+					doFrameFocus();
+				}
+				@Override
+				public void windowLostFocus(WindowEvent e)
+				{
+					doFrameFocus();
+				}
+			});
+		}
+	}
+	
+	/**
+	 * Changes the visuals of the frame depending focus state.
+	 */
+	protected void doProjectionFocus(boolean pState)
+	{
+		if (TheProjection.isFocused())
+		{
+			// Make the window clickable if focused (by using the taskbar)
+			setWindowClickable(true);
+			TheKnob.updateKnobAppearance(0);
+			// Reapply opacity
+			if (TheOptions.wantProjectionOpacityOnFocus)
+			{
+				TheProjection.setOpacity(TheOptions.PROJECTION_OPACITY_FOCUSED);
+			}
+			else
+			{
+				TheProjection.setOpacity(TheOptions.PROJECTION_OPACITY_UNFOCUSED);
+			}
+		}
+		else
+		{
+			if (TheProjection.getState() == Frame.ICONIFIED)
+			{
+				TheKnob.updateKnobAppearance(2);
+			}
+			// Reapply opacity
+			if (TheOptions.wantProjectionOpacityOnFocus)
+			{
+				TheProjection.setOpacity(TheOptions.PROJECTION_OPACITY_UNFOCUSED);
+			}
+			else
+			{
+				TheProjection.setOpacity(TheOptions.PROJECTION_OPACITY_UNFOCUSED);
+			}
+		}
+		if (pState)
+		{
+			TheKnob.setVisible(true);
+			TheKnob.setAlwaysOnTop(true);
+		}
+	}
+	
+	/**
+	 * Changes the visuals of the frame depending focus state.
+	 */
+	protected void doFrameFocus()
+	{
+		if (TheFrame.isFocused())
+		{
+			// Make the window clickable if focused (by using the taskbar)
+			setWindowClickable(true);
+			// Restyle the bar
+			COLOR_BAR_CURRENT = TheOptions.COLORPRESET_START.BarFocused;
+			TheBar.setBackground(TheOptions.COLORPRESET_START.BarFocused);
+			// Reapply opacity
+			if (TheOptions.wantOpacityOnFocus)
+			{
+				TheFrame.setOpacity(TheOptions.OPACITY_FOCUSED);
+			}
+			else
+			{
+				TheFrame.setOpacity(TheOptions.OPACITY_UNFOCUSED);
+			}
+
+			// Restyle the border
+			LineBorder panelBorder = new LineBorder(
+				TheOptions.COLORPRESET_START.BorderFocused, TheOptions.BORDER_THICKNESS);
+			TheContainer.setBorder(panelBorder);
+		}
+		else
+		{
+			// Restyle the bar
+			COLOR_BAR_CURRENT = TheOptions.COLORPRESET_START.BarUnfocused;
+			TheBar.setBackground(TheOptions.COLORPRESET_START.BarUnfocused);
+			// Reapply opacity
+			if (TheOptions.wantOpacityOnFocus)
+			{
+				TheFrame.setOpacity(TheOptions.OPACITY_UNFOCUSED);
+			}
+			else
+			{
+				TheFrame.setOpacity(TheOptions.OPACITY_UNFOCUSED);
+			}
+
+			// Restyle the border
+			LineBorder panelBorder = new LineBorder(
+				TheOptions.COLORPRESET_START.BorderUnfocused, TheOptions.BORDER_THICKNESS);
+			TheContainer.setBorder(panelBorder);
+		}
+	}
+
+	/**
+	 * Does options saving before exiting when user exits the program.
+	 */
+	protected void bindWindowClose()
+	{
+		if (isProjection)
+		{
+			TheProjection.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+			TheProjection.addWindowListener(new WindowAdapter()
+			{
+				@Override
+				public void windowClosing(WindowEvent e)
+				{
+					doExit();
+				}
+			});
+		}
+		else
+		{
+			TheFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+			TheFrame.addWindowListener(new WindowAdapter()
+			{
+				@Override
+				public void windowClosing(WindowEvent e)
+				{
+					doExit();
+				}
+			});
 		}
 	}
 	
@@ -665,328 +1008,6 @@ public final class Navi extends JPanel {
 		
 		// Refresh frame visuals
 		doFrameFocus();
-	}
-
-	/**
-	 * Sets the default style and behavior of the frame that contains the browser.
-	 */
-	protected void createFrame()
-	{
-		// Combine some measurements
-		sumDimensions();
-		
-		// Create frame (the window)
-		Point initialLocation = new Point(
-			TheOptions.WINDOWPRESET_START.PosX,
-			TheOptions.WINDOWPRESET_START.PosY);
-		Dimension initialDimension = new Dimension(
-			TheOptions.WINDOWPRESET_START.Width,
-			TheOptions.WINDOWPRESET_START.Height);
-		Dimension minimumDimension = new Dimension(
-			TheOptions.FRAME_MINIMUM.width + ADD_HORIZONTAL_PIXELS,
-			TheOptions.FRAME_MINIMUM.height + ADD_VERTICAL_PIXELS);
-		TheFrame = new ResizableFrame(initialDimension, minimumDimension, initialLocation);
-
-		// Additional frame settings
-		TheFrame.setTitle(PROGRAM_NAME);
-		TheFrame.getContentPane().add(this, BorderLayout.CENTER);
-		TheFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		TheFrame.setAlwaysOnTop(TheOptions.wantAlwaysOnTop);
-		TheFrame.setOpacity(TheOptions.OPACITY_UNFOCUSED);
-		TheFrame.setVisible(true);
-
-		// Container inside the frame
-		TheContainer = (JPanel) TheFrame.getContentPane();
-		TheContainer.setBackground(new Color(0, 0, 0, 0));
-
-		// Top bar of the frame, acts as a menu and a place to drag-move the frame
-		TheBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 2));
-		TheBar.setPreferredSize(new Dimension(
-			TheOptions.WINDOWPRESET_START.Width,
-			TheOptions.MENUBAR_HEIGHT));
-		TheBar.setBackground(TheOptions.COLORPRESET_START.BarUnfocused);
-		TheBar.addMouseListener(TheFrame);
-		TheBar.addMouseMotionListener(TheFrame);
-		TheContainer.add(TheBar, BorderLayout.NORTH);
-
-		// Set program taskbar icon
-		TheFrame.setIconImage(getIcon("task_program").getImage());
-		
-		// Show navbar if chosen before
-		doShowNavbar(TheOptions.wantNavbar, true);
-		
-		// Bind frame behavior
-		bindFrameFocus();
-		bindFrameClose();
-	}
-	
-	/**
-	 * Makes the frame clickthrough, such that the overlay is visible but any
-	 * mouse interactions with the window are not possible.
-	 * Source by Joe C from: http://stackoverflow.com/questions/11217660/java-making-a-window-click-through-including-text-images
-	 * @param pWantClickable to turn on/off.
-	 */
-	protected void setClickable(boolean pWantClickable)
-	{
-		// Don't do anything if already in wanted state
-		if (isClickable == pWantClickable)
-		{
-			return;
-		}
-		isClickable = pWantClickable;
-		WinDef.HWND hwnd;
-		// Also hides the menu bar if want clickthrough, and resizes the frame to compensate for the menu bar loss/gain
-		if (isProjection)
-		{
-			hwnd = getHWnd(TheProjection);
-		}
-		else
-		{
-			boolean isMaximized = TheFrame.isMaximized();
-			setBarVisible(isClickable);
-			if (isMaximized)
-			{
-				TheFrame.setFullscreen();
-			}
-			hwnd = getHWnd(TheFrame);
-		}
-		
-		// Documentation for the GetWindowLong function is at https://msdn.microsoft.com/en-us/library/windows/desktop/ms633591.aspx
-		int wl = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE);
-		if (pWantClickable)
-		{
-			// Remove the clickthrough flags
-			if (isProjection)
-			{
-				wl = wl & WinUser.WS_EX_LAYERED;
-			}
-			else
-			{
-				wl = wl & WinUser.WS_EX_LAYERED & WinUser.WS_EX_TRANSPARENT;
-			}
-		}
-		else
-		{
-			if (isProjection == false && TheOptions.OPACITY_UNFOCUSED == 1)
-			{
-				// Clickthrough only works if the window is transparent (not 100% opaque)
-				TheOptions.set_OPACITY_UNFOCUSED(TRANSPARENCY_MIN);
-				TheFrame.setOpacity(TheOptions.OPACITY_UNFOCUSED);
-			}
-			// The flags to make the window clickthrough
-			wl = wl | WinUser.WS_EX_LAYERED | WinUser.WS_EX_TRANSPARENT;
-		}
-		// Documentation for the GWL_EXSTYLE value is at https://msdn.microsoft.com/en-us/library/windows/desktop/ff700543.aspx
-		User32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_EXSTYLE, wl);
-	}
-	protected void toggleClickable()
-	{
-		setClickable(!isClickable);
-	}
-	
-	/**
-	 * Get the window handle from the OS.
-	 * @param pComponent
-	 * @return hwnd
-	 */
-	protected static HWND getHWnd(Component pComponent)
-	{
-		HWND hwnd = new HWND();
-		hwnd.setPointer(Native.getComponentPointer(pComponent));
-		return hwnd;
-	}
-	
-	/**
-	 * Shows or hides the menu bar.
-	 * @param pWantVisible 
-	 */
-	protected void setBarVisible(boolean pWantVisible)
-	{
-		if (isBarVisible == pWantVisible)
-		{
-			return;
-		}
-		isBarVisible = pWantVisible;
-		
-		TheBar.setVisible(pWantVisible);
-		if (pWantVisible)
-		{
-			// Compensate size for the missing menu bar
-			TheFrame.setSize(new Dimension(
-				TheFrame.getWidth(),
-				TheFrame.getHeight() + TheOptions.MENUBAR_HEIGHT)
-			);
-			// Compensate position
-			nudgeFrame(0, -TheOptions.MENUBAR_HEIGHT);
-		}
-		else
-		{
-			TheFrame.setSize(new Dimension(
-				TheFrame.getWidth(),
-				TheFrame.getHeight() - TheOptions.MENUBAR_HEIGHT)
-			);
-			nudgeFrame(0, TheOptions.MENUBAR_HEIGHT);
-		}
-	}
-	
-	/**
-	 * Moves the frame x and y additional pixels.
-	 * @param posX to the right, negative values to the left.
-	 * @param posY to the bottom, negative values to the top.
-	 */
-	protected void nudgeFrame(int posX, int posY)
-	{
-		TheFrame.setLocation(
-			(int) TheFrame.getLocation().getX() + posX,
-			(int) TheFrame.getLocation().getY() + posY);
-	}
-
-	/**
-	 * Does options saving before exiting when user exits the program.
-	 */
-	protected void bindFrameClose()
-	{
-		TheFrame.addWindowListener(new WindowAdapter()
-		{
-			public void windowClosing(WindowEvent e)
-			{
-				doExit();
-			}
-		});
-	}
-
-	/**
-	 * Detects frame's focus state to do the visual changes.
-	 */
-	protected void bindFrameFocus()
-	{
-		// Frame focus change visual
-		TheFrame.addWindowFocusListener(new WindowFocusListener()
-		{
-			@Override
-			public void windowGainedFocus(WindowEvent e)
-			{
-				doFrameFocus();
-			}
-			@Override
-			public void windowLostFocus(WindowEvent e)
-			{
-				doFrameFocus();
-			}
-		});
-	}
-	
-	/**
-	 * Changes the visuals of the frame depending focus state.
-	 */
-	protected void doFrameFocus()
-	{
-		if (TheFrame.isFocused())
-		{
-			// Make the window clickable if focused (by using the taskbar)
-			setClickable(true);
-			// Restyle the bar
-			COLOR_BAR_CURRENT = TheOptions.COLORPRESET_START.BarFocused;
-			TheBar.setBackground(TheOptions.COLORPRESET_START.BarFocused);
-			// Reapply opacity
-			if (TheOptions.wantOpacityOnFocus)
-			{
-				TheFrame.setOpacity(TheOptions.OPACITY_FOCUSED);
-			}
-			else
-			{
-				TheFrame.setOpacity(TheOptions.OPACITY_UNFOCUSED);
-			}
-
-			// Restyle the border
-			LineBorder panelBorder = new LineBorder(
-				TheOptions.COLORPRESET_START.BorderFocused, TheOptions.BORDER_THICKNESS);
-			TheContainer.setBorder(panelBorder);
-		}
-		else
-		{
-			// Restyle the bar
-			COLOR_BAR_CURRENT = TheOptions.COLORPRESET_START.BarUnfocused;
-			TheBar.setBackground(TheOptions.COLORPRESET_START.BarUnfocused);
-			// Reapply opacity
-			if (TheOptions.wantOpacityOnFocus)
-			{
-				TheFrame.setOpacity(TheOptions.OPACITY_UNFOCUSED);
-			}
-			else
-			{
-				TheFrame.setOpacity(TheOptions.OPACITY_UNFOCUSED);
-			}
-
-			// Restyle the border
-			LineBorder panelBorder = new LineBorder(
-				TheOptions.COLORPRESET_START.BorderUnfocused, TheOptions.BORDER_THICKNESS);
-			TheContainer.setBorder(panelBorder);
-		}
-	}
-	
-	/**
-	 * Detects frame's focus state to do the visual changes.
-	 */
-	protected void bindProjectionFocus()
-	{
-		// Frame focus change visual
-		TheProjection.addWindowFocusListener(new WindowFocusListener()
-		{
-			@Override
-			public void windowGainedFocus(WindowEvent e)
-			{
-				doProjectionFocus(true);
-			}
-			@Override
-			public void windowLostFocus(WindowEvent e)
-			{
-				doProjectionFocus(false);
-			}
-		});
-	}
-	
-	/**
-	 * Changes the visuals of the frame depending focus state.
-	 */
-	protected void doProjectionFocus(boolean pState)
-	{
-		if (TheProjection.isFocused())
-		{
-			// Make the window clickable if focused (by using the taskbar)
-			setClickable(true);
-			TheKnob.updateKnobAppearance(0);
-			// Reapply opacity
-			if (TheOptions.wantProjectionOpacityOnFocus)
-			{
-				TheProjection.setOpacity(TheOptions.PROJECTION_OPACITY_FOCUSED);
-			}
-			else
-			{
-				TheProjection.setOpacity(TheOptions.PROJECTION_OPACITY_UNFOCUSED);
-			}
-		}
-		else
-		{
-			if (TheProjection.getState() == Frame.ICONIFIED)
-			{
-				TheKnob.updateKnobAppearance(2);
-			}
-			// Reapply opacity
-			if (TheOptions.wantProjectionOpacityOnFocus)
-			{
-				TheProjection.setOpacity(TheOptions.PROJECTION_OPACITY_UNFOCUSED);
-			}
-			else
-			{
-				TheProjection.setOpacity(TheOptions.PROJECTION_OPACITY_UNFOCUSED);
-			}
-		}
-		if (pState)
-		{
-			TheKnob.setVisible(true);
-			TheKnob.setAlwaysOnTop(true);
-		}
 	}
 	
 	/**
@@ -1136,7 +1157,7 @@ public final class Navi extends JPanel {
 	 */
 	protected void openNewWindow()
 	{
-		String filepath = Navi.DIRECTORY_CURRENT + Navi.FILENAME_EXECUTABLE;
+		String filepath = Navi.DIRECTORY_CURRENT + ((isProjection) ? TheOptions.URL_PROJECTION_NEW_WINDOW : TheOptions.URL_NEW_WINDOW);
 		try
 		{
 			Process process = Runtime.getRuntime().exec(filepath);

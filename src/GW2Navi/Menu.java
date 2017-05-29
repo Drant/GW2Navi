@@ -378,7 +378,7 @@ public class Menu {
 				}
 				else
 				{
-					oNavi.setClickable(false);
+					oNavi.setWindowClickable(false);
 				}
 			}
 		});
@@ -411,7 +411,7 @@ public class Menu {
 				}
 				else if (SwingUtilities.isRightMouseButton(e))
 				{
-					oNavi.toggleFrame(false);
+					oNavi.toggleWindow(false);
 				}
 			}
 		});
@@ -489,7 +489,7 @@ public class Menu {
 
 		item_Navigation.addItemListener((ItemEvent e) ->
 		{
-			oNavi.doShowNavbar(e.getStateChange() == ItemEvent.SELECTED, false);
+			oNavi.toggleFrameNavbar(e.getStateChange() == ItemEvent.SELECTED, false);
 		});
 		item_NewWindow.addActionListener((ActionEvent e) ->
 		{
@@ -913,9 +913,9 @@ public class Menu {
 			tempitem.addActionListener((ActionEvent e) ->
 			{
 				int index = getMenuItemIndex(menu_Border, e);
-				oNavi.resizeByThickness(index);
+				oNavi.resizeFrameByThickness(index);
 				oNavi.TheOptions.set_BORDER_THICKNESS(index);
-				oNavi.sumDimensions();
+				oNavi.sumFrameDimensions();
 				oNavi.doFrameFocus();
 			});
 		}
@@ -1135,22 +1135,15 @@ public class Menu {
 		});
 		titem_ShowWindow.addActionListener((ActionEvent e) ->
 		{
-			oNavi.toggleFrame(true);
+			oNavi.toggleWindow(true);
 		});
 		titem_Windowed.addActionListener((ActionEvent e) ->
 		{
-			oNavi.toggleProjectionMaximize(false);
+			oNavi.maximizeWindow(false);
 		});
 		titem_Maximize.addActionListener((ActionEvent e) ->
 		{
-			if (isProjection)
-			{
-				oNavi.toggleProjectionMaximize(true);
-			}
-			else
-			{
-				oNavi.toggleFrameMaximize();
-			}
+			oNavi.maximizeWindow(true);
 		});
 		titem_AlwaysOnTop.addActionListener((ActionEvent e) ->
 		{
@@ -1158,11 +1151,7 @@ public class Menu {
 		});
 		titem_Minimize.addActionListener((ActionEvent e) ->
 		{
-			if (isProjection)
-			{
-				oNavi.TheKnob.setVisible(false);
-			}
-			oNavi.toggleFrame(false);
+			oNavi.minimizeWindow();
 		});
 		titem_MinimizeToTray.addActionListener((ActionEvent e) ->
 		{
@@ -1171,7 +1160,7 @@ public class Menu {
 				oNavi.TheKnob.setVisible(false);
 				oNavi.TheProjection.setVisible(false);
 			}
-			oNavi.toggleFrame(false);
+			oNavi.toggleWindow(false);
 		});
 		titem_Miniaturize.addActionListener((ActionEvent e) ->
 		{
@@ -1179,7 +1168,7 @@ public class Menu {
 		});
 		titem_AlignKnob.addActionListener((ActionEvent e) ->
 		{
-			oNavi.toggleFrame(true);
+			oNavi.toggleWindow(true);
 			oNavi.TheKnob.alignKnob();
 		});
 		titem_ZoomIn.addActionListener((ActionEvent e) ->
@@ -1226,7 +1215,7 @@ public class Menu {
 			{
 				if (SwingUtilities.isLeftMouseButton(e))
 				{
-					oNavi.toggleFrame();
+					oNavi.toggleWindow();
 				}
 			}
 			@Override
