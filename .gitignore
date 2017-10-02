@@ -8,4 +8,4 @@ test/*
 build.xml
 debug.log
 manifest.mf
-options-debug.ini
+bin/options-debug.ini

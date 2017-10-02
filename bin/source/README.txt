@@ -4,8 +4,9 @@ INSTRUCTIONS:
 Create a new IDE project and copy and paste the folder "bin" to your project's
 folder, and the files in the "src" folder to your project's source folder.
 Import dependencies/libraries using the contents of the "lib" folder.
-Before building and running the program, change the project's Run or Java VM
-options to: -Djava.library.path="./bin/lib/libcef/win64"
+Before building and running the program, change...
+Working Directory: DRIVELETTER:\PATH\TO\GW2Navi\bin
+VM Options: -Djava.library.path=./lib/libcef/win64
 
 LICENSE:
 No attribution is required for GW2Navi, although you may need to attribute the

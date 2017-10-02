@@ -53,6 +53,7 @@ public class Menu {
 	CustomMenu TheMenu; // The menu and its submenus on the bar
 	JDialog TrayPopupHelper;
 	static Point mousePressedPoint;
+	int ICON_WIDTH = 20;
 	int ICON_HEIGHT = 16;
 	
 	JRadioButtonMenuItem tempradioitem;
@@ -308,13 +309,13 @@ public class Menu {
 		menu_Quick_B.setOpaque(false);
 		menu_Quick_Toggle.setOpaque(false);
 		
-		menu_Miniaturize.setPreferredSize(new Dimension((oNavi.TheOptions.wantNativeInterface ? 16 : 20), ICON_HEIGHT));
-		menu_Quick_1.setPreferredSize(new Dimension(20, ICON_HEIGHT));
-		menu_Quick_2.setPreferredSize(new Dimension(20, ICON_HEIGHT));
-		menu_Quick_3.setPreferredSize(new Dimension(20, ICON_HEIGHT));
-		menu_Quick_4.setPreferredSize(new Dimension(20, ICON_HEIGHT));
-		menu_Quick_A.setPreferredSize(new Dimension(20, ICON_HEIGHT));
-		menu_Quick_B.setPreferredSize(new Dimension(20, ICON_HEIGHT));
+		menu_Miniaturize.setPreferredSize(new Dimension(ICON_WIDTH, ICON_HEIGHT));
+		menu_Quick_1.setPreferredSize(new Dimension(ICON_WIDTH, ICON_HEIGHT));
+		menu_Quick_2.setPreferredSize(new Dimension(ICON_WIDTH, ICON_HEIGHT));
+		menu_Quick_3.setPreferredSize(new Dimension(ICON_WIDTH, ICON_HEIGHT));
+		menu_Quick_4.setPreferredSize(new Dimension(ICON_WIDTH, ICON_HEIGHT));
+		menu_Quick_A.setPreferredSize(new Dimension(ICON_WIDTH, ICON_HEIGHT));
+		menu_Quick_B.setPreferredSize(new Dimension(ICON_WIDTH, ICON_HEIGHT));
 		menu_Quick_Toggle.setPreferredSize(new Dimension(24, ICON_HEIGHT));
 		
 		// Press and drag mouse to move window
@@ -932,7 +933,7 @@ public class Menu {
 		// Tray icon menu, reuses menu items previously created
 		//------------------------------------------------------------------
 		// Tray icon setup
-		URL trayiconurl = System.class.getResource("/img/" + (isProjection ? "tray_projection" : "tray_program") + ".png");
+		URL trayiconurl = Navi.class.getResource("/img/" + (isProjection ? "tray_projection" : "tray_program") + ".png");
 		Image icon = Toolkit.getDefaultToolkit().getImage(trayiconurl);
 		oNavi.TheTrayIcon = new TrayIcon(icon, (isProjection ? Navi.PROGRAM_NAME_PROJECTION : Navi.PROGRAM_NAME));
 		oNavi.TheTray = SystemTray.getSystemTray();

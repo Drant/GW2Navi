@@ -56,16 +56,16 @@ public final class Navi extends JPanel {
 	
 	// Meta
 	boolean isDebug = false;
-	final static String PROGRAM_VERSION = "2017.05.29";
+	final static String PROGRAM_VERSION = "2017.10.01";
 	final static String PROGRAM_NAME = "GW2Navi";
 	final static String PROGRAM_NAME_PROJECTION = "GW2Navi 3D";
 	final static String PROGRAM_NAME_CURSOR = "GW2Navi Cursor";
 	static String DIRECTORY_ICONS = "img/"; // Image folder inside package
-	static String DIRECTORY_ICONS_CUSTOM = "bin/cursors/";
-	static String FILENAME_OPTIONS = "options.ini";
-	static String FILENAME_OPTIONS_DEBUG = "options-debug.ini";
-	static String FILENAME_TRANSLATIONS = "translations.ini";
-	static String FILENAME_BOOKMARKS = "bookmarks.txt";
+	static String DIRECTORY_ICONS_CUSTOM = "cursors/";
+	static String FILEPATH_OPTIONS = "options.ini";
+	static String FILEPATH_OPTIONS_DEBUG = "options-debug.ini";
+	static String FILEPATH_TRANSLATIONS = "translations.ini";
+	static String FILEPATH_BOOKMARKS = "bookmarks.txt";
 	static String EXTENSION_IMAGES = ".png";
 	static String DIRECTORY_CURRENT = "";
 	static String DIRECTORY_CUSTOM = "";
@@ -172,7 +172,7 @@ public final class Navi extends JPanel {
 		// Changes for debugging
 		if (isDebug)
 		{
-			FILENAME_OPTIONS = FILENAME_OPTIONS_DEBUG;
+			FILEPATH_OPTIONS = FILEPATH_OPTIONS_DEBUG;
 		}
 		
 		// Load options and data first before doing anything
@@ -260,31 +260,31 @@ public final class Navi extends JPanel {
 	{
 		try
 		{
-			TheOptions = new Option(new Ini(new File(FILENAME_OPTIONS)));
+			TheOptions = new Option(new Ini(new File(FILEPATH_OPTIONS)));
 		}
 		catch (IOException ex)
 		{
-			displayErrorLoad(FILENAME_OPTIONS);
+			displayErrorLoad(FILEPATH_OPTIONS);
 		}
 		
 		try
 		{
 			TheTranslations = new Translation(
-				new Ini(new File(FILENAME_TRANSLATIONS)),
+				new Ini(new File(FILEPATH_TRANSLATIONS)),
 				TheOptions.LANGUAGE);
 		}
 		catch (IOException ex)
 		{
-			displayErrorLoad(FILENAME_TRANSLATIONS);
+			displayErrorLoad(FILEPATH_TRANSLATIONS);
 		}
 		
 		try
 		{
-			TheBookmarks = new Bookmark(FILENAME_BOOKMARKS);
+			TheBookmarks = new Bookmark(FILEPATH_BOOKMARKS);
 		}
 		catch (IOException ex)
 		{
-			displayErrorLoad(FILENAME_BOOKMARKS);
+			displayErrorLoad(FILEPATH_BOOKMARKS);
 		}
 	}
 	
@@ -927,10 +927,10 @@ public final class Navi extends JPanel {
 	 */
 	protected void saveKnobWindowPreset()
 	{
-		// Make sure knob is not outside of screen
+		// Allow negative positions for multiple monitors
 		Point knobPoint = TheKnob.getLocation();
-		int knobPosX = (knobPoint.x > 0 && knobPoint.x < RESOLUTION_WIDTH) ? knobPoint.x : 0;
-		int knobPosY = (knobPoint.y > 0 && knobPoint.y < RESOLUTION_HEIGHT) ? knobPoint.y : 0;
+		int knobPosX = knobPoint.x;
+		int knobPosY = knobPoint.y;
 		TheOptions.set_WINDOWPRESET_KNOB(TheOptions.WINDOWPRESET_KNOB.Width, TheOptions.WINDOWPRESET_KNOB.Height, knobPosX, knobPosY);
 	}
 	protected void saveProjectionWindowPreset()
@@ -938,10 +938,10 @@ public final class Navi extends JPanel {
 		// Make sure dimension is not zero or negative
 		int width = (TheProjection.getWidth() > TheOptions.PROJECTION_MINIMUM.width) ? TheProjection.getWidth() : TheOptions.PROJECTION_MINIMUM.width;
 		int height = (TheProjection.getHeight() > TheOptions.PROJECTION_MINIMUM.height) ? TheProjection.getHeight() : TheOptions.PROJECTION_MINIMUM.height;
-		// Make sure position is not outside of screen
+		// Allow negative positions for multiple monitors
 		Point point = TheProjection.getLocation();
-		int posX = (point.x > 0 && point.x < RESOLUTION_WIDTH) ? point.x : 0;
-		int posY = (point.y > 0 && point.y < RESOLUTION_HEIGHT) ? point.y : 0;
+		int posX = point.x;
+		int posY = point.y;
 		TheOptions.set_WINDOWPRESET_PROJECTION_START(width, height, posX, posY);
 	}
 	protected void saveFrameWindowPreset()
@@ -949,10 +949,10 @@ public final class Navi extends JPanel {
 		// Make sure dimension is not zero or negative
 		int width = (TheFrame.getWidth() > TheOptions.FRAME_MINIMUM.width) ? TheFrame.getWidth() : TheOptions.FRAME_MINIMUM.width;
 		int height = (TheFrame.getHeight() > TheOptions.FRAME_MINIMUM.height) ? TheFrame.getHeight() : TheOptions.FRAME_MINIMUM.height;
-		// Make sure position is not outside of screen
+		// Allow negative positions for multiple monitors
 		Point point = TheFrame.getLocation();
-		int posX = (point.x > 0 && point.x < RESOLUTION_WIDTH) ? point.x : 0;
-		int posY = (point.y > 0 && point.y < RESOLUTION_HEIGHT) ? point.y : 0;
+		int posX = point.x;
+		int posY = point.y;
 		TheOptions.set_WINDOWPRESET_START(width, height, posX, posY);
 	}
 	
@@ -1103,7 +1103,7 @@ public final class Navi extends JPanel {
 		}
 		catch (IOException ex)
 		{
-			displayErrorSave(FILENAME_OPTIONS);
+			displayErrorSave(FILEPATH_OPTIONS);
 		}
 	}
 	

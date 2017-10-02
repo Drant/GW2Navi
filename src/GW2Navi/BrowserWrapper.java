@@ -9,7 +9,6 @@ package GW2Navi;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.io.File;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -43,7 +42,7 @@ public class BrowserWrapper {
 	
 	// Constants and limits
 	final String CACHE_FOLDER_NAME = "GW2Navi"; // Browser cache folder, absolute in %APPDATA%
-	final String DIRECTORY_CACHE = "bin\\cache"; // Browser cache folder, relative to executable
+	final String DIRECTORY_CACHE = "cache"; // Browser cache folder, relative to executable
 	final String[] LEGAL_URL_SCHEMES = {"http://", "https://"}; // Last visited URL must start with these substrings
 	final int URL_CHAR_LIMIT = 1024;
 	
@@ -207,19 +206,11 @@ public class BrowserWrapper {
 		String localdomain = oNavi.TheOptions.URL_LOCAL;
 		
 		// Checks if the substring from the beginning of the URL contains the match
-		if (currenturl.length() >= sitedomain.length())
+		if (currenturl.startsWith(LEGAL_URL_SCHEMES[0] + sitedomain)
+			|| currenturl.startsWith(LEGAL_URL_SCHEMES[1] + sitedomain)
+			|| currenturl.startsWith(LEGAL_URL_SCHEMES[0] + localdomain))
 		{
-			if (currenturl.substring(0, sitedomain.length()).equals(sitedomain))
-			{
-				return true;
-			}
-		}
-		if (currenturl.length() >= localdomain.length())
-		{
-			if (currenturl.substring(0, localdomain.length()).equals(localdomain))
-			{
-				return true;
-			}
+			return true;
 		}
 		
 		return false;
